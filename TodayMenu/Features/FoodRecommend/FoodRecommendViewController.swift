@@ -34,26 +34,22 @@ final class FoodRecommendViewController: BaseViewController {
         let output = viewModel.transform(input)
         
         output.currentItem
-            .drive(with: self, onNext: { owner, item in
+            .drive(with: self) { owner, item in
                 owner.mainView.render(item)
-            })
+            }
             .disposed(by: bag)
         
         output.isAccepted
-            .drive(with: self, onNext: { owner, isAccepted in
+            .drive(with: self) { owner, isAccepted in
                 owner.mainView.showAcceptedUI(isAccepted)
-            })
+            }
             .disposed(by: bag)
         
         output.routeToReview
-            .emit(with: self, onNext: { owner, item in
-                // TODO: 리뷰 화면으로 푸시/프리젠트
-                let alert = UIAlertController(title: "리뷰 작성",
-                                              message: "'\(item.title)' 리뷰 화면으로 이동합니다.",
-                                              preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "확인", style: .default))
-                owner.present(alert, animated: true)
-            })
+            .emit(with: self) { owner, item in
+                let reviewVC = MakeFoodReviewViewController(food: item)
+                owner.navigationController?.pushViewController(reviewVC, animated: true)
+            }
             .disposed(by: bag)
     }
 }
