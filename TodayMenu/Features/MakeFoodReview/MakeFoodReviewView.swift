@@ -13,11 +13,10 @@ final class MakeFoodReviewView: BaseView {
     let scrollView = UIScrollView()
     let contentView = UIView()
     
-    let basicInfoLabel = BasicLabel(text: "기본 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
+    let requiredInfoLabel = BasicLabel(text: "필수 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
+    // 메뉴 이름
     let foodNameLabel = BasicLabel(text: "메뉴 이름", alignment: .left, size: FontSize.regular, weight: .medium)
     let foodNameTextField = BasicTextField.reviewStyle(placeholder: "예: 매운돈까스, 라멘, 피자...")
-    let storeNameLabel = BasicLabel(text: "식당 이름", alignment: .left, size: FontSize.regular, weight: .medium)
-    let storeNameTextField = BasicTextField.reviewStyle(placeholder: "식당명을 입력해주세요")
     
     // 별점
     let ratingLabel = BasicLabel(text: "별점", alignment: .left, size: FontSize.subTitle, weight: .semibold)
@@ -32,11 +31,8 @@ final class MakeFoodReviewView: BaseView {
     var starButtons: [UIButton] = []
     let ratingPromptLabel = BasicLabel(text: "별점을 선택해주세요", alignment: .center, size: FontSize.regular, weight: .medium, textColor: .point)
     
-    // 추가 정보
-    let additionalInfoLabel = BasicLabel(text: "추가 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
-    let commentLabel = BasicLabel(text: "코멘트", alignment: .left, size: FontSize.regular, weight: .medium)
-    let commentTextView = CustomTextView.reviewStyle(placeholder: "식사는 어떠셨나요? 한줄 평가를 입력해주세요.")
-    let visitDateLabel = BasicLabel(text: "방문 일시", alignment: .left, size: FontSize.regular, weight: .medium)
+    // 방문 일시
+    let visitDateLabel = BasicLabel(text: "방문 일시", alignment: .left, size: FontSize.subTitle, weight: .semibold)
     let dateContainer = UIView()
     let yearTextField = BasicTextField(text: "2025.09.27", placeholder: "", size: FontSize.regular)
     let timeTextField = {
@@ -48,6 +44,13 @@ final class MakeFoodReviewView: BaseView {
         textField.textAlignment = .center
         return textField
     }()
+    
+    // 선택 정보
+    let optionalInfoLabel = BasicLabel(text: "선택 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
+    let storeNameLabel = BasicLabel(text: "식당 이름", alignment: .left, size: FontSize.regular, weight: .medium)
+    let storeNameTextField = BasicTextField.reviewStyle(placeholder: "식당명을 입력해주세요")
+    let commentLabel = BasicLabel(text: "코멘트", alignment: .left, size: FontSize.regular, weight: .medium)
+    let commentTextView = CustomTextView.reviewStyle(placeholder: "식사는 어떠셨나요? 한줄 평가를 입력해주세요.")
     let taggedPeopleLabel = BasicLabel(text: "함께 먹은 사람", alignment: .left, size: FontSize.regular, weight: .medium)
     let tagStackView = {
         let stackView = UIStackView()
@@ -99,9 +102,9 @@ final class MakeFoodReviewView: BaseView {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        [basicInfoLabel, foodNameLabel, foodNameTextField, storeNameLabel, storeNameTextField,
-         ratingLabel, starStackView, ratingPromptLabel, additionalInfoLabel, commentLabel,
-         commentTextView, visitDateLabel, dateContainer, taggedPeopleLabel,
+        [requiredInfoLabel, foodNameLabel, foodNameTextField, ratingLabel, starStackView, ratingPromptLabel,
+         visitDateLabel, dateContainer, optionalInfoLabel, storeNameLabel, storeNameTextField,
+         commentLabel, commentTextView, taggedPeopleLabel,
          tagStackView, companionTextField, photoSectionLabel, photoUploadView].forEach {
             contentView.addSubview($0)
         }
@@ -120,13 +123,13 @@ final class MakeFoodReviewView: BaseView {
             $0.width.equalToSuperview()
         }
         
-        basicInfoLabel.snp.makeConstraints {
+        requiredInfoLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(24)
             $0.leading.equalToSuperview().offset(20)
         }
         
         foodNameLabel.snp.makeConstraints {
-            $0.top.equalTo(basicInfoLabel.snp.bottom).offset(20)
+            $0.top.equalTo(requiredInfoLabel.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -136,19 +139,8 @@ final class MakeFoodReviewView: BaseView {
             $0.height.equalTo(44)
         }
         
-        storeNameLabel.snp.makeConstraints {
-            $0.top.equalTo(foodNameTextField.snp.bottom).offset(20)
-            $0.leading.equalToSuperview().offset(20)
-        }
-        
-        storeNameTextField.snp.makeConstraints {
-            $0.top.equalTo(storeNameLabel.snp.bottom).offset(8)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(44)
-        }
-        
         ratingLabel.snp.makeConstraints {
-            $0.top.equalTo(storeNameTextField.snp.bottom).offset(32)
+            $0.top.equalTo(foodNameTextField.snp.bottom).offset(32)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -164,24 +156,8 @@ final class MakeFoodReviewView: BaseView {
             $0.centerX.equalToSuperview()
         }
         
-        additionalInfoLabel.snp.makeConstraints {
-            $0.top.equalTo(ratingPromptLabel.snp.bottom).offset(32)
-            $0.leading.equalToSuperview().offset(20)
-        }
-        
-        commentLabel.snp.makeConstraints {
-            $0.top.equalTo(additionalInfoLabel.snp.bottom).offset(20)
-            $0.leading.equalToSuperview().offset(20)
-        }
-        
-        commentTextView.snp.makeConstraints {
-            $0.top.equalTo(commentLabel.snp.bottom).offset(8)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(100)
-        }
-        
         visitDateLabel.snp.makeConstraints {
-            $0.top.equalTo(commentTextView.snp.bottom).offset(20)
+            $0.top.equalTo(ratingPromptLabel.snp.bottom).offset(32)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -194,7 +170,7 @@ final class MakeFoodReviewView: BaseView {
         
         yearTextField.snp.makeConstraints {
             $0.leading.top.bottom.equalToSuperview()
-            $0.width.equalTo(100)
+            $0.width.equalTo(120)
         }
         
         timeTextField.snp.makeConstraints {
@@ -204,8 +180,35 @@ final class MakeFoodReviewView: BaseView {
             $0.trailing.equalToSuperview()
         }
         
+        optionalInfoLabel.snp.makeConstraints {
+            $0.top.equalTo(dateContainer.snp.bottom).offset(32)
+            $0.leading.equalToSuperview().offset(20)
+        }
+        
+        storeNameLabel.snp.makeConstraints {
+            $0.top.equalTo(optionalInfoLabel.snp.bottom).offset(20)
+            $0.leading.equalToSuperview().offset(20)
+        }
+        
+        storeNameTextField.snp.makeConstraints {
+            $0.top.equalTo(storeNameLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(44)
+        }
+        
+        commentLabel.snp.makeConstraints {
+            $0.top.equalTo(storeNameTextField.snp.bottom).offset(20)
+            $0.leading.equalToSuperview().offset(20)
+        }
+        
+        commentTextView.snp.makeConstraints {
+            $0.top.equalTo(commentLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(100)
+        }
+        
         taggedPeopleLabel.snp.makeConstraints {
-            $0.top.equalTo(dateContainer.snp.bottom).offset(20)
+            $0.top.equalTo(commentTextView.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
         }
         
