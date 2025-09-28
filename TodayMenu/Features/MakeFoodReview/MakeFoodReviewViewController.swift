@@ -136,3 +136,24 @@ extension MakeFoodReviewViewController {
             .disposed(by: disposeBag)
     }
 }
+
+// MARK: - Image Picker
+extension MakeFoodReviewViewController {
+    private func presentImagePicker() {
+        let alert = UIAlertController(title: "사진 선택", message: "사진을 선택하는 방법을 선택해주세요", preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "카메라", style: .default) { _ in
+            // TODO: Present camera
+            print("카메라 기능")
+        })
+        
+        alert.addAction(UIAlertAction(title: "갤러리", style: .default) { _ in
+            // TODO: Present photo library
+            print("갤러리 기능")
+        })
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        
+        present(alert, animated: true)
+    }
+}
