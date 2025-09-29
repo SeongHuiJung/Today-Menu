@@ -14,6 +14,7 @@ final class MakeFoodReviewViewModel {
     private let disposeBag = DisposeBag()
     private let selectedFood: FoodRecommendation
     private let menuSelectedTime: Date
+    private let repository = ReviewRepository()
     
     struct Input {
         let starTaps: [Observable<Void>]
@@ -46,6 +47,10 @@ final class MakeFoodReviewViewModel {
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
     private let selectedTagRelay = BehaviorRelay<Int>(value: -1)
     private let eatTimeRelay = BehaviorRelay<Date>(value: Date())
+    private let commentRelay = BehaviorRelay<String>(value: "")
+    private let companionNameRelay = BehaviorRelay<String>(value: "")
+    private let foodNameRelay = BehaviorRelay<String>(value: "")
+    private let storeNameRelay = BehaviorRelay<String>(value: "")
     
     init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
@@ -60,6 +65,26 @@ final class MakeFoodReviewViewModel {
         // 먹은 시간 처리
         input.datePickerValueChanged
             .bind(to: eatTimeRelay)
+            .disposed(by: disposeBag)
+        
+        // 코멘트 처리
+        input.commentText
+            .bind(to: commentRelay)
+            .disposed(by: disposeBag)
+        
+        // 동행인 이름 처리
+        input.companionText
+            .bind(to: companionNameRelay)
+            .disposed(by: disposeBag)
+        
+        // 음식 이름 처리
+        input.foodNameText
+            .bind(to: foodNameRelay)
+            .disposed(by: disposeBag)
+        
+        // 식당 이름 처리
+        input.storeNameText
+            .bind(to: storeNameRelay)
             .disposed(by: disposeBag)
         
         let eatTimeDisplay = eatTimeRelay
@@ -224,9 +249,75 @@ extension MakeFoodReviewViewModel {
     }
     
     private func saveReview() -> Observable<Result<String, Error>> {
-        // TODO: Implement actual save logic
-        return Observable.just(.success("리뷰가 저장되었습니다!"))
-            .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
+                observer.onNext(.failure(ReviewError.validationFailed("오류가 발생했습니다")))
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            
+            // Food 객체 생성 (사용자가 수정한 이름 사용)
+            let foodName = self.foodNameRelay.value.isEmpty ? self.selectedFood.title : self.foodNameRelay.value
+            let food = Food(name: foodName)
+            
+            // Restaurant 객체 생성 (사용자가 수정한 이름 사용)
+            let restaurant: Restaurant?
+            let storeName = self.storeNameRelay.value
+            if !storeName.isEmpty {
+                restaurant = Restaurant(
+                    name: storeName,
+                    latitude: 0.0, // TODO: 실제 위치 데이터 사용
+                    longitude: 0.0
+                )
+            } else {
+                restaurant = nil
+            }
+            
+            // Companion 객체 생성
+            var companions: [Companion] = []
+            if self.selectedTagRelay.value >= 0 && self.selectedTagRelay.value < CompanionType.allCases.count {
+                let companionType = CompanionType.allCases[self.selectedTagRelay.value]
+                let companionName = self.companionNameRelay.value
+                
+                // 혼자 태그 선택 시: name 없이 type만 저장
+                if companionType == .alone {
+                    let companion = Companion(type: .alone, name: nil)
+                    companions.append(companion)
+                }
+                // 다른 태그 선택 시: name이 비어있어도 type은 저장
+                else {
+                    let name = companionName.isEmpty ? nil : companionName
+                    let companion = Companion(type: companionType, name: name)
+                    companions.append(companion)
+                }
+            }
+            
+            // Review 객체 생성
+            let review = Review(
+                food: [food],
+                restaurant: restaurant,
+                rating: Double(self.starRatingRelay.value),
+                comment: self.commentRelay.value.isEmpty ? nil : self.commentRelay.value,
+                companion: companions,
+                photos: [], // TODO: 사진 기능 추가 시 구현
+                ateAt: self.eatTimeRelay.value
+            )
+            
+            // Realm에 저장
+            self.repository.saveReview(review)
+                .subscribe(onNext: { result in
+                    switch result {
+                    case .success:
+                        observer.onNext(.success("리뷰가 저장되었습니다!"))
+                    case .failure(let error):
+                        observer.onNext(.failure(error))
+                    }
+                    observer.onCompleted()
+                })
+                .disposed(by: self.disposeBag)
+            
+            return Disposables.create()
+        }
     }
 }
 
