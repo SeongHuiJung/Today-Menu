@@ -37,6 +37,7 @@ final class MakeFoodReviewViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
+        setupRestaurantSearchButton()
         bind()
     }
     
@@ -61,6 +62,20 @@ extension MakeFoodReviewViewController {
         
         navigationController?.navigationBar.tintColor = .white
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: saveButton)
+    }
+    
+    private func setupRestaurantSearchButton() {
+        mainView.restaurantSearchButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.presentRestaurantSearch()
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    private func presentRestaurantSearch() {
+        let searchVC = RestaurantSearchViewController()
+        searchVC.modalPresentationStyle = .fullScreen
+        present(searchVC, animated: true)
     }
 }
 
@@ -88,7 +103,7 @@ extension MakeFoodReviewViewController {
             photoUploadTap: photoUploadTap,
             saveTap: saveButton.rx.tap.asObservable(),
             foodNameText: mainView.foodNameTextField.rx.text.orEmpty.asObservable(),
-            storeNameText: mainView.storeNameTextField.rx.text.orEmpty.asObservable(),
+            storeNameText: Observable.just(""), // 검색 버튼으로 대체
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
             companionText: mainView.companionTextField.rx.text.orEmpty.asObservable(),
             datePickerValueChanged: mainView.datePicker.rx.value.asObservable()
@@ -202,3 +217,5 @@ extension MakeFoodReviewViewController {
         present(alert, animated: true)
     }
 }
+
+

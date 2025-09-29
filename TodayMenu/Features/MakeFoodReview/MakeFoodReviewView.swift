@@ -57,7 +57,21 @@ final class MakeFoodReviewView: BaseView {
     // 선택 정보
     let optionalInfoLabel = BasicLabel(text: "선택 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
     let storeNameLabel = BasicLabel(text: "식당 이름", alignment: .left, size: FontSize.regular, weight: .medium)
-    let storeNameTextField = BasicTextField.reviewStyle(placeholder: "식당명을 입력해주세요")
+    
+    // 식당 검색 버튼
+    let restaurantSearchButton = {
+        let button = UIButton(type: .system)
+        button.backgroundColor = UIColor(named: "customLightGray")
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor.lightGray.cgColor
+        button.contentHorizontalAlignment = .center
+        button.titleLabel?.font = .systemFont(ofSize: FontSize.regular)
+        button.setTitle("🔍 식당 검색", for: .normal)
+        button.setTitleColor(.darkGray, for: .normal)
+        return button
+    }()
+    
     let commentLabel = BasicLabel(text: "코멘트", alignment: .left, size: FontSize.regular, weight: .medium)
     let commentTextView = CustomTextView.reviewStyle(placeholder: "식사는 어떠셨나요? 한줄 평가를 입력해주세요.")
     let taggedPeopleLabel = BasicLabel(text: "함께 먹은 사람", alignment: .left, size: FontSize.regular, weight: .medium)
@@ -113,7 +127,7 @@ final class MakeFoodReviewView: BaseView {
         scrollView.addSubview(contentView)
         
         [requiredInfoLabel, foodNameLabel, foodNameTextField, ratingLabel, starStackView, ratingPromptLabel,
-         eatTimeLabel, datePickerContainer, datePicker, optionalInfoLabel, storeNameLabel, storeNameTextField,
+         eatTimeLabel, datePickerContainer, datePicker, optionalInfoLabel, storeNameLabel, restaurantSearchButton,
          commentLabel, commentTextView, taggedPeopleLabel,
          tagStackView, companionTextField, photoSectionLabel, photoUploadView].forEach {
             contentView.addSubview($0)
@@ -196,14 +210,14 @@ final class MakeFoodReviewView: BaseView {
             $0.leading.equalToSuperview().offset(20)
         }
         
-        storeNameTextField.snp.makeConstraints {
+        restaurantSearchButton.snp.makeConstraints {
             $0.top.equalTo(storeNameLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(44)
+            $0.height.equalTo(50)
         }
         
         commentLabel.snp.makeConstraints {
-            $0.top.equalTo(storeNameTextField.snp.bottom).offset(20)
+            $0.top.equalTo(restaurantSearchButton.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -347,6 +361,5 @@ extension MakeFoodReviewView {
     
     func populateInitialData(foodName: String, storeName: String) {
         foodNameTextField.text = foodName
-        storeNameTextField.text = storeName
     }
 }
