@@ -88,8 +88,8 @@ final class MakeFoodReviewViewModel {
             .disposed(by: disposeBag)
         
         let eatTimeDisplay = eatTimeRelay
-            .map { [weak self] date in
-                self?.formatDate(date) ?? ""
+            .map { date in
+                DateFormatter.formatDateToString(date: date, format: "yyyy년 M월 d일 a h시 mm분")
             }
             .asDriver(onErrorJustReturn: "")
         
@@ -218,7 +218,7 @@ final class MakeFoodReviewViewModel {
     }
 }
 
-// MARK: - Private Methods
+// MARK: - Logic
 extension MakeFoodReviewViewModel {
     private func calculateInitialEatTime() -> Date {
         // 메뉴 선택 시간 + 1시간
@@ -227,13 +227,6 @@ extension MakeFoodReviewViewModel {
         
         // 1시간 후가 현재 시간보다 미래라면 현재 시간 사용
         return oneHourLater > now ? now : oneHourLater
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월 d일 a h시 mm분"
-        return formatter.string(from: date)
     }
     
     private func validateForm(foodName: String, storeName: String, rating: Int, comment: String, taggedPeople: String) -> ValidationResult {
