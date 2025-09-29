@@ -44,7 +44,7 @@ final class FoodRecommendViewModel {
         // PASS → 다음 인덱스로
         input.passTap
             .withLatestFrom(accepted)
-            .filter { !$0 }                 // 이미 수락했으면 PASS 금지(요구사항 상 필요 시 삭제)
+            .filter { !$0 }                 
             .withLatestFrom(index) { _, i in i }
             .map { [weak self] i -> Int in
                 guard let self else { return i }

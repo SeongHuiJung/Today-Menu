@@ -31,18 +31,27 @@ final class MakeFoodReviewView: BaseView {
     var starButtons: [UIButton] = []
     let ratingPromptLabel = BasicLabel(text: "별점을 선택해주세요", alignment: .center, size: FontSize.regular, weight: .medium, textColor: .point)
     
-    // 방문 일시
-    let visitDateLabel = BasicLabel(text: "방문 일시", alignment: .left, size: FontSize.subTitle, weight: .semibold)
-    let dateContainer = UIView()
-    let yearTextField = BasicTextField(text: "2025.09.27", placeholder: "", size: FontSize.regular)
-    let timeTextField = {
-        let textField = BasicTextField(text: "오후 1시", placeholder: "", size: FontSize.regular)
-        textField.backgroundColor = .white
-        textField.layer.cornerRadius = 8
-        textField.layer.borderWidth = 1
-        textField.layer.borderColor = UIColor.lightGray.cgColor
-        textField.textAlignment = .center
-        return textField
+    // 먹은 시간
+    let eatTimeLabel = BasicLabel(text: "먹은 시간", alignment: .left, size: FontSize.subTitle, weight: .semibold)
+    let datePickerContainer = UIView()
+    let datePickerButton = {
+        let button = UIButton(type: .custom)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.lightGray.cgColor
+        button.contentHorizontalAlignment = .center
+        button.titleLabel?.font = .systemFont(ofSize: FontSize.regular)
+        button.setTitleColor(.black, for: .normal)
+        return button
+    }()
+    let datePicker = {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .dateAndTime
+        picker.preferredDatePickerStyle = .wheels
+        picker.locale = Locale(identifier: "ko_KR")
+        picker.isHidden = true
+        return picker
     }()
     
     // 선택 정보
@@ -64,7 +73,7 @@ final class MakeFoodReviewView: BaseView {
     // 동적으로 나타나는 텍스트필드
     let companionTextField = {
         let textField = BasicTextField.reviewStyle(placeholder: "함께 먹은 사람을 입력해주세요.")
-        textField.isHidden = true
+        textField.isHidden = true // 초기에는 숨김
         textField.alpha = 0 // 애니메이션을 위한 alpha 설정
         return textField
     }()
@@ -96,6 +105,7 @@ final class MakeFoodReviewView: BaseView {
         super.init(frame: frame)
         setupStarButtons()
         setupTagButtons()
+        setupDatePicker()
     }
     
     override func configureHierarchy() {
@@ -103,16 +113,15 @@ final class MakeFoodReviewView: BaseView {
         scrollView.addSubview(contentView)
         
         [requiredInfoLabel, foodNameLabel, foodNameTextField, ratingLabel, starStackView, ratingPromptLabel,
-         visitDateLabel, dateContainer, optionalInfoLabel, storeNameLabel, storeNameTextField,
+         eatTimeLabel, datePickerContainer, datePicker, optionalInfoLabel, storeNameLabel, storeNameTextField,
          commentLabel, commentTextView, taggedPeopleLabel,
          tagStackView, companionTextField, photoSectionLabel, photoUploadView].forEach {
             contentView.addSubview($0)
         }
         
-        [yearTextField, timeTextField].forEach { dateContainer.addSubview($0) }
+        [datePickerButton].forEach { datePickerContainer.addSubview($0) }
         [cameraImageView, photoPromptLabel, photoSubLabel].forEach { photoUploadView.addSubview($0) }
     }
-    
     override func configureLayout() {
         scrollView.snp.makeConstraints {
             $0.edges.equalTo(safeAreaLayoutGuide)
@@ -156,32 +165,29 @@ final class MakeFoodReviewView: BaseView {
             $0.centerX.equalToSuperview()
         }
         
-        visitDateLabel.snp.makeConstraints {
+        eatTimeLabel.snp.makeConstraints {
             $0.top.equalTo(ratingPromptLabel.snp.bottom).offset(32)
             $0.leading.equalToSuperview().offset(20)
         }
         
-        dateContainer.snp.makeConstraints {
-            $0.top.equalTo(visitDateLabel.snp.bottom).offset(8)
-            $0.leading.equalToSuperview().offset(20)
-            $0.trailing.lessThanOrEqualToSuperview().inset(20)
+        datePickerContainer.snp.makeConstraints {
+            $0.top.equalTo(eatTimeLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(44)
         }
         
-        yearTextField.snp.makeConstraints {
-            $0.leading.top.bottom.equalToSuperview()
-            $0.width.equalTo(120)
+        datePickerButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
         
-        timeTextField.snp.makeConstraints {
-            $0.leading.equalTo(yearTextField.snp.trailing).offset(8)
-            $0.top.bottom.equalToSuperview()
-            $0.width.equalTo(100)
-            $0.trailing.equalToSuperview()
+        datePicker.snp.makeConstraints {
+            $0.top.equalTo(datePickerContainer.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(200)
         }
         
         optionalInfoLabel.snp.makeConstraints {
-            $0.top.equalTo(dateContainer.snp.bottom).offset(32)
+            $0.top.equalTo(datePickerContainer.snp.bottom).offset(32)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -252,9 +258,29 @@ final class MakeFoodReviewView: BaseView {
         }
     }
 }
-
-// MARK: - Setup Methods
+    
 extension MakeFoodReviewView {
+    private func setupDatePicker() {
+        datePicker.alpha = 0
+    }
+    
+    func toggleDatePicker() {
+        datePicker.isHidden.toggle()
+        
+        // 애니메이션으로 datePicker 표시/숨김
+        UIView.animate(withDuration: 0.3) {
+            self.datePicker.alpha = self.datePicker.isHidden ? 0 : 1
+        }
+    }
+    
+    func updateDateDisplay(_ dateString: String) {
+        datePickerButton.setTitle(dateString, for: .normal)
+    }
+    
+    func setDatePickerDate(_ date: Date) {
+        datePicker.date = date
+    }
+
     private func setupStarButtons() {
         for i in 0..<5 {
             let button = StarButton(tag: i + 1)
@@ -276,14 +302,11 @@ extension MakeFoodReviewView {
         for (index, button) in starButtons.enumerated() {
             button.isSelected = index < rating
         }
-        
-        if rating > 0 {
-            ratingPromptLabel.text = "\(rating)점"
-            ratingPromptLabel.textColor = UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0)
-        } else {
-            ratingPromptLabel.text = "별점을 선택해주세요"
-            ratingPromptLabel.textColor = .point
-        }
+    }
+    
+    func updateStarRatingDisplay(_ text: String, isHighlighted: Bool) {
+        ratingPromptLabel.text = text
+        ratingPromptLabel.textColor = isHighlighted ? UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0) : .point
     }
     
     func selectTag(at index: Int) {
@@ -293,44 +316,37 @@ extension MakeFoodReviewView {
         }
         
         // 선택된 버튼 활성화
-        let selectedButton = tagButtons[index]
-        selectedButton.isSelected = true
-        
-        // "혼자"를 제외하고 텍스트필드 표시/숨김
-        let selectedTag = selectedButton.titleLabel?.text ?? ""
-        
-        if selectedTag == "혼자" {
-            // "혼자" 선택 시 텍스트필드 숨김 및 내용 삭제
-            hideCompanionTextField()
-        } else {
-            // 다른 태그 선택 시 텍스트필드 표시
-            showCompanionTextField()
+        if index >= 0 && index < tagButtons.count {
+            tagButtons[index].isSelected = true
         }
     }
     
-    private func showCompanionTextField() {
+    func showCompanionTextField() {
         companionTextField.isHidden = false
         
-        UIView.animate(withDuration: 0.3, animations: {
+        UIView.animate(withDuration: 0.3) {
             self.companionTextFieldHeightConstraint?.update(offset: 44)
             self.companionTextField.alpha = 1.0
             self.layoutIfNeeded()
-        })
+        }
     }
     
-    private func hideCompanionTextField() {
+    func hideCompanionTextField() {
         UIView.animate(withDuration: 0.3, animations: {
             self.companionTextFieldHeightConstraint?.update(offset: 0)
             self.companionTextField.alpha = 0.0
             self.layoutIfNeeded()
-        }, completion: { _ in
+        }) { _ in
             self.companionTextField.isHidden = true
-            self.companionTextField.text = "" // "혼자" 선택 시 내용 삭제
-        })
+        }
     }
     
-    func populateData(with food: FoodRecommendation) {
-        foodNameTextField.text = food.title
-        storeNameTextField.text = food.place
+    func clearCompanionTextField() {
+        companionTextField.text = ""
+    }
+    
+    func populateInitialData(foodName: String, storeName: String) {
+        foodNameTextField.text = foodName
+        storeNameTextField.text = storeName
     }
 }

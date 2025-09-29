@@ -13,6 +13,7 @@ final class MakeFoodReviewViewModel {
     
     private let disposeBag = DisposeBag()
     private let selectedFood: FoodRecommendation
+    private let menuSelectedTime: Date
     
     struct Input {
         let starTaps: [Observable<Void>]
@@ -23,12 +24,18 @@ final class MakeFoodReviewViewModel {
         let storeNameText: Observable<String>
         let commentText: Observable<String>
         let companionText: Observable<String>
+        let datePickerValueChanged: Observable<Date>
     }
     
     struct Output {
         let initialData: Driver<FoodRecommendation>
+        let initialEatTime: Driver<Date>
+        let eatTimeDisplay: Driver<String>
         let starRatingUpdate: Driver<Int>
+        let starRatingDisplay: Driver<String>
         let tagSelectionUpdate: Driver<Int>
+        let showCompanionTextField: Driver<Bool>
+        let companionTextFieldClear: Driver<Void>
         let validationResult: Driver<ValidationResult>
         let showImagePicker: Signal<Void>
         let showSaveSuccess: Signal<String>
@@ -38,12 +45,29 @@ final class MakeFoodReviewViewModel {
     
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
     private let selectedTagRelay = BehaviorRelay<Int>(value: -1)
+    private let eatTimeRelay = BehaviorRelay<Date>(value: Date())
     
-    init(selectedFood: FoodRecommendation) {
+    init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
+        self.menuSelectedTime = menuSelectedTime
+        
+        // 초기 먹은 시간 설정
+        let initialEatTime = calculateInitialEatTime()
+        self.eatTimeRelay.accept(initialEatTime)
     }
     
     func transform(_ input: Input) -> Output {
+        // 먹은 시간 처리
+        input.datePickerValueChanged
+            .bind(to: eatTimeRelay)
+            .disposed(by: disposeBag)
+        
+        let eatTimeDisplay = eatTimeRelay
+            .map { [weak self] date in
+                self?.formatDate(date) ?? ""
+            }
+            .asDriver(onErrorJustReturn: "")
+        
         // 별점 핸들링
         let starRating = Observable.merge(
             input.starTaps.enumerated().map { index, tap in
@@ -51,9 +75,18 @@ final class MakeFoodReviewViewModel {
             }
         )
         .do(onNext: { [weak self] rating in
-            guard let self else { return }
-            starRatingRelay.accept(rating)
+            self?.starRatingRelay.accept(rating)
         })
+        
+        let starRatingDisplay = starRatingRelay
+            .map { rating in
+                if rating > 0 {
+                    return "\(rating)점"
+                } else {
+                    return "별점을 선택해주세요"
+                }
+            }
+            .asDriver(onErrorJustReturn: "별점을 선택해주세요")
         
         // 동행인 태그 핸들링
         let tagSelection = Observable.merge(
@@ -62,9 +95,19 @@ final class MakeFoodReviewViewModel {
             }
         )
         .do(onNext: { [weak self] tagIndex in
-            guard let self else { return }
-            selectedTagRelay.accept(tagIndex)
+            self?.selectedTagRelay.accept(tagIndex)
         })
+        
+        let showCompanionTextField = selectedTagRelay
+            .map { tagIndex in
+                return tagIndex >= 1 // '혼자' 가 아닌 다른 태그 선택시
+            }
+            .asDriver(onErrorJustReturn: false)
+        
+        let companionTextFieldClear = selectedTagRelay
+            .filter { $0 == 0 } // "혼자" 선택 시
+            .map { _ in () }
+            .asDriver(onErrorJustReturn: ())
         
         let formData = Observable.combineLatest(
             input.foodNameText.startWith(selectedFood.title),
@@ -134,8 +177,13 @@ final class MakeFoodReviewViewModel {
         
         return Output(
             initialData: Driver.just(selectedFood),
+            initialEatTime: Driver.just(eatTimeRelay.value),
+            eatTimeDisplay: eatTimeDisplay,
             starRatingUpdate: starRating.asDriver(onErrorJustReturn: 0),
+            starRatingDisplay: starRatingDisplay,
             tagSelectionUpdate: tagSelection.asDriver(onErrorJustReturn: -1),
+            showCompanionTextField: showCompanionTextField,
+            companionTextFieldClear: companionTextFieldClear,
             validationResult: validationResult.asDriver(onErrorJustReturn: ValidationResult(isValid: false)),
             showImagePicker: input.photoUploadTap.asSignal(onErrorSignalWith: .empty()),
             showSaveSuccess: saveSuccess.asSignal(onErrorSignalWith: .empty()),
@@ -147,6 +195,22 @@ final class MakeFoodReviewViewModel {
 
 // MARK: - Private Methods
 extension MakeFoodReviewViewModel {
+    private func calculateInitialEatTime() -> Date {
+        // 메뉴 선택 시간 + 1시간
+        let oneHourLater = menuSelectedTime.addingTimeInterval(3600)
+        let now = Date()
+        
+        // 1시간 후가 현재 시간보다 미래라면 현재 시간 사용
+        return oneHourLater > now ? now : oneHourLater
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월 d일 a h시 mm분"
+        return formatter.string(from: date)
+    }
+    
     private func validateForm(foodName: String, storeName: String, rating: Int, comment: String, taggedPeople: String) -> ValidationResult {
         if foodName.isEmpty {
             return ValidationResult(isValid: false, errorMessage: "메뉴 이름을 입력해주세요")
@@ -155,8 +219,6 @@ extension MakeFoodReviewViewModel {
         if rating == 0 {
             return ValidationResult(isValid: false, errorMessage: "별점을 선택해주세요")
         }
-        
-        // 메뉴 이름, 별점, 방문 시간만 필수 (방문 시간은 기본값이 있으므로 챍하지 않음)
         
         return ValidationResult(isValid: true)
     }

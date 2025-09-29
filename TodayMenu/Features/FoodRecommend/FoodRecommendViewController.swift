@@ -13,6 +13,7 @@ final class FoodRecommendViewController: BaseViewController {
     private let mainView = FoodRecommendView()
     private let viewModel = FoodRecommendViewModel()
     private let bag = DisposeBag()
+    private let menuSelectedTime = Date() // 메뉴 선택 시간 저장
     
     override func loadView() {
         self.view = mainView
@@ -47,7 +48,7 @@ final class FoodRecommendViewController: BaseViewController {
         
         output.routeToReview
             .emit(with: self) { owner, item in
-                let reviewVC = MakeFoodReviewViewController(food: item)
+                let reviewVC = MakeFoodReviewViewController(food: item, menuSelectedTime: owner.menuSelectedTime)
                 owner.navigationController?.pushViewController(reviewVC, animated: true)
             }
             .disposed(by: bag)

@@ -14,6 +14,7 @@ final class MakeFoodReviewViewController: BaseViewController {
     private let mainView = MakeFoodReviewView()
     private let viewModel: MakeFoodReviewViewModel
     private let disposeBag = DisposeBag()
+    private let menuSelectedTime: Date
     
     private let saveButton = {
         let button = UIButton()
@@ -23,8 +24,9 @@ final class MakeFoodReviewViewController: BaseViewController {
         return button
     }()
     
-    init(food: FoodRecommendation) {
-        self.viewModel = MakeFoodReviewViewModel(selectedFood: food)
+    init(food: FoodRecommendation, menuSelectedTime: Date = Date()) {
+        self.viewModel = MakeFoodReviewViewModel(selectedFood: food, menuSelectedTime: menuSelectedTime)
+        self.menuSelectedTime = menuSelectedTime
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -74,6 +76,12 @@ extension MakeFoodReviewViewController {
             .map { _ in () }
             .asObservable()
         
+        mainView.datePickerButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.mainView.toggleDatePicker()
+            }
+            .disposed(by: disposeBag)
+        
         let input = MakeFoodReviewViewModel.Input(
             starTaps: starTaps,
             tagTaps: tagTaps,
@@ -82,14 +90,27 @@ extension MakeFoodReviewViewController {
             foodNameText: mainView.foodNameTextField.rx.text.orEmpty.asObservable(),
             storeNameText: mainView.storeNameTextField.rx.text.orEmpty.asObservable(),
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
-            companionText: mainView.companionTextField.rx.text.orEmpty.asObservable()
+            companionText: mainView.companionTextField.rx.text.orEmpty.asObservable(),
+            datePickerValueChanged: mainView.datePicker.rx.value.asObservable()
         )
         
         let output = viewModel.transform(input)
         
         output.initialData
             .drive(with: self) { owner, food in
-                owner.mainView.populateData(with: food)
+                owner.mainView.populateInitialData(foodName: food.title, storeName: food.place)
+            }
+            .disposed(by: disposeBag)
+        
+        output.initialEatTime
+            .drive(with: self) { owner, date in
+                owner.mainView.setDatePickerDate(date)
+            }
+            .disposed(by: disposeBag)
+        
+        output.eatTimeDisplay
+            .drive(with: self) { owner, dateString in
+                owner.mainView.updateDateDisplay(dateString)
             }
             .disposed(by: disposeBag)
         
@@ -99,9 +120,33 @@ extension MakeFoodReviewViewController {
             }
             .disposed(by: disposeBag)
         
+        output.starRatingDisplay
+            .drive(with: self) { owner, text in
+                let isHighlighted = !text.contains("선택")
+                owner.mainView.updateStarRatingDisplay(text, isHighlighted: isHighlighted)
+            }
+            .disposed(by: disposeBag)
+        
         output.tagSelectionUpdate
             .drive(with: self) { owner, tagIndex in
                 owner.mainView.selectTag(at: tagIndex)
+            }
+            .disposed(by: disposeBag)
+        
+        output.showCompanionTextField
+            .skip(1)
+            .drive(with: self) { owner, shouldShow in
+                if shouldShow {
+                    owner.mainView.showCompanionTextField()
+                } else {
+                    owner.mainView.hideCompanionTextField()
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        output.companionTextFieldClear
+            .drive(with: self) { owner, _ in
+                owner.mainView.clearCompanionTextField()
             }
             .disposed(by: disposeBag)
         
