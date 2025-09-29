@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		576462B62E8A8E30004C77F5 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 5772698F2E8523BF00C9FAC5 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		5772698D2E85239400C9FAC5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5772698C2E85239400C9FAC5 /* SnapKit */; };
 		577269902E8523BF00C9FAC5 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5772698F2E8523BF00C9FAC5 /* RealmSwift */; };
 		577269932E8523D000C9FAC5 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 577269922E8523D000C9FAC5 /* RxCocoa */; };
@@ -16,6 +17,20 @@
 		5772699E2E85241900C9FAC5 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 5772699D2E85241900C9FAC5 /* Alamofire */; };
 		577269A12E85245C00C9FAC5 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 577269A02E85245C00C9FAC5 /* Toast */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		576462B72E8A8E31004C77F5 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				576462B62E8A8E30004C77F5 /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		577269022E8511CB00C9FAC5 /* TodayMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TodayMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -87,6 +102,7 @@
 				577268FE2E8511CB00C9FAC5 /* Sources */,
 				577268FF2E8511CB00C9FAC5 /* Frameworks */,
 				577269002E8511CB00C9FAC5 /* Resources */,
+				576462B72E8A8E31004C77F5 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

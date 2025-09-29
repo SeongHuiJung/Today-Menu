@@ -21,5 +21,9 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>음식점 위치를 지도에 표시하기 위해 위치 권한이 필요합니다.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>음식점 위치를 지도에 표시하기 위해 위치 권한이 필요합니다.</string>
 </dict>
 </plist>
