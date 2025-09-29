@@ -8,8 +8,11 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import RealmSwift
 
 final class FoodRecommendViewController: BaseViewController {
+    
+    let realm = try! Realm()
     private let mainView = FoodRecommendView()
     private let viewModel = FoodRecommendViewModel()
     private let bag = DisposeBag()
@@ -24,6 +27,7 @@ final class FoodRecommendViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         bind()
+        print(realm.configuration.fileURL)
     }
     
     private func bind() {

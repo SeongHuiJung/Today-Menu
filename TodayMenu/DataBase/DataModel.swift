@@ -1,0 +1,111 @@
+//
+//  data.swift
+//  TodayMenu
+//
+//  Created by 정성희 on 9/29/25.
+//
+
+import Foundation
+import RealmSwift
+
+class Review: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var food: List<Food> // 메뉴 1:N
+    @Persisted var restaurant: Restaurant? // 음식점 1:1
+    @Persisted var rating: Double // 0.5 단위 평점
+    @Persisted var comment: String? // 코멘트
+    @Persisted var companion: List<Companion> // 함께 먹은 친구들 1:N
+    @Persisted var photos: List<String> // 직접 찍은 사진 (파일 경로 또는 URL)
+    @Persisted var ateAt: Date // 먹은 날짜/시간
+    @Persisted var createdAt: Date // 데이터 생성 시각
+    @Persisted var updatedAt: Date? // 수정 시각 (수정한 적 없으면 nil)
+    @Persisted var averagePrice: Int? // 음식 평균 가격
+    @Persisted var emoji: String? // 이모지 이름
+    
+    convenience init(food: [Food], restaurant: Restaurant? = nil, rating: Double, comment: String? = nil, companion: [Companion] = [], photos: [String] = [], ateAt: Date, averagePrice: Int? = nil, emoji: String? = nil) {
+        self.init()
+        
+        self.food.append(objectsIn: food)
+        self.restaurant = restaurant
+        self.rating = rating
+        self.comment = comment
+        self.companion.append(objectsIn: companion)
+        self.photos.append(objectsIn: photos)
+        self.ateAt = ateAt
+        self.createdAt = Date()
+        self.updatedAt = nil
+        self.averagePrice = averagePrice
+        self.emoji = emoji
+    }
+}
+
+class Food: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var name: String // 음식 이름
+    
+    // Inverse Relationship
+    @Persisted(originProperty: "food")
+    var reviews: LinkingObjects<Review> // 리뷰 역참조
+    
+        self.init()
+        
+        self.name = name
+        self.cuisine.append(objectsIn: cuisine)
+    }
+}
+
+class Restaurant: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var name: String // 음식점 이름
+    @Persisted var latitude: Double // 위도
+    @Persisted var longitude: Double // 경도
+    @Persisted var cuisine: List<String> // 한중일 등 음식 카테고리
+    
+    // Inverse Relationship
+    @Persisted(originProperty: "restaurant")
+    var reviews: LinkingObjects<Review> // 리뷰 역참조
+    
+    convenience init(name: String, latitude: Double, longitude: Double, cuisine: [String] = []) {
+        self.init()
+        
+        self.name = name
+        self.latitude = latitude
+        self.longitude = longitude
+        self.cuisine.append(objectsIn: cuisine)
+    }
+}
+
+class Companion: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var type: String // 동행인 타입 enum의 rawValue
+    @Persisted var name: String? // 동행인 이름 (선택사항)
+    
+    // Inverse Relationship
+    @Persisted(originProperty: "companion")
+    var reviews: LinkingObjects<Review> // 함께 먹은 리뷰 역참조
+    
+    convenience init(type: CompanionType, name: String? = nil) {
+        self.init()
+        
+        self.type = type.rawValue
+        self.name = name
+    }
+}
+
+enum CompanionType: String, CaseIterable {
+    case alone = "alone"
+    case friend = "friend"
+    case family = "family"
+    case lover = "lover"
+    case colleague = "colleague"
+    
+    var displayName: String {
+        switch self {
+        case .alone: return "혼자"
+        case .friend: return "친구"
+        case .family: return "가족"
+        case .lover: return "연인"
+        case .colleague: return "동료"
+        }
+    }
+}
