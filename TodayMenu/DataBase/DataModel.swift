@@ -42,15 +42,19 @@ class Review: Object {
 class Food: Object {
     @Persisted(primaryKey: true) var id: ObjectId
     @Persisted var name: String // 음식 이름
+    @Persisted var cuisine: String // 메뉴 카테고리 대분류 (예: 한식, 중식, 일식)
+    @Persisted var category: String // 메뉴 카테고리 중분류 (예: 피자, 돈까스, 초밥, 스테이크)
     
     // Inverse Relationship
     @Persisted(originProperty: "food")
     var reviews: LinkingObjects<Review> // 리뷰 역참조
     
+    convenience init(name: String, cuisine: String = "", category: String = "") {
         self.init()
         
         self.name = name
-        self.cuisine.append(objectsIn: cuisine)
+        self.cuisine = cuisine
+        self.category = category
     }
 }
 
@@ -59,19 +63,19 @@ class Restaurant: Object {
     @Persisted var name: String // 음식점 이름
     @Persisted var latitude: Double // 위도
     @Persisted var longitude: Double // 경도
-    @Persisted var cuisine: List<String> // 한중일 등 음식 카테고리
+    @Persisted var cuisine: String // 한중일 등 음식 카테고리
     
     // Inverse Relationship
     @Persisted(originProperty: "restaurant")
     var reviews: LinkingObjects<Review> // 리뷰 역참조
     
-    convenience init(name: String, latitude: Double, longitude: Double, cuisine: [String] = []) {
+    convenience init(name: String, latitude: Double, longitude: Double, cuisine: String = "") {
         self.init()
         
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
-        self.cuisine.append(objectsIn: cuisine)
+        self.cuisine = cuisine
     }
 }
 
@@ -93,11 +97,7 @@ class Companion: Object {
 }
 
 enum CompanionType: String, CaseIterable {
-    case alone = "alone"
-    case friend = "friend"
-    case family = "family"
-    case lover = "lover"
-    case colleague = "colleague"
+    case alone, friend, family,  lover, colleague
     
     var displayName: String {
         switch self {
@@ -106,6 +106,22 @@ enum CompanionType: String, CaseIterable {
         case .family: return "가족"
         case .lover: return "연인"
         case .colleague: return "동료"
+        }
+    }
+}
+
+enum Cuisine: String, CaseIterable {
+    case korean, chinese, japanese, western, mexican, vietnamese, thai
+    
+    var displayName: String {
+        switch self {
+        case .korean: return "한식"
+        case .chinese: return "중식"
+        case .japanese: return "일식"
+        case .western: return "양식"
+        case .mexican: return "멕시코식"
+        case .vietnamese: return "베트남식"
+        case .thai: return "태국식"
         }
     }
 }

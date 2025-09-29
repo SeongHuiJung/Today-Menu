@@ -12,6 +12,7 @@ struct FoodRecommendation: Equatable {
     let title: String
     let place: String
     let distanceKm: Double
+    let cuisine: String
     let category: String
 }
 
@@ -22,10 +23,10 @@ protocol RecommendationProvider {
 final class MockRecommendationProvider: RecommendationProvider {
     func all() -> [FoodRecommendation] {
         return [
-            .init(emoji: "🍖", title: "매운돈까스", place: "맛있는집", distanceKm: 0.8, category: "한식"),
-            .init(emoji: "🍜", title: "마라탕", place: "라화방", distanceKm: 1.2, category: "중식"),
-            .init(emoji: "🍣", title: "모듬초밥", place: "스시나니", distanceKm: 0.5, category: "일식"),
-            .init(emoji: "🍕", title: "페페로니 피자", place: "피자마루", distanceKm: 2.4, category: "양식"),
+            .init(emoji: "🍖", title: "매운돈까스", place: "맛있는집", distanceKm: 0.8, cuisine: Cuisine.korean.rawValue, category: "돈까스"),
+            .init(emoji: "🍜", title: "마라탕", place: "라화방", distanceKm: 1.2, cuisine: Cuisine.chinese.rawValue, category: "마라탕"),
+            .init(emoji: "🍣", title: "모듬초밥", place: "스시나니", distanceKm: 0.5, cuisine: Cuisine.japanese.rawValue, category: "초밥"),
+            .init(emoji: "🍕", title: "페페로니 피자", place: "피자마루", distanceKm: 2.4, cuisine: Cuisine.western.rawValue, category: "피자"),
         ]
     }
 }

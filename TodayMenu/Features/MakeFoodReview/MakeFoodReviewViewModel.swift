@@ -256,18 +256,23 @@ extension MakeFoodReviewViewModel {
                 return Disposables.create()
             }
             
-            // Food 객체 생성 (사용자가 수정한 이름 사용)
+            // Food 객체 생성
             let foodName = self.foodNameRelay.value.isEmpty ? self.selectedFood.title : self.foodNameRelay.value
-            let food = Food(name: foodName)
+            let food = Food(
+                name: foodName,
+                cuisine: self.selectedFood.cuisine, // 대분류 (한식/중식/일식)
+                category: self.selectedFood.category // 중분류 (피자/돈까스/초밥)
+            )
             
-            // Restaurant 객체 생성 (사용자가 수정한 이름 사용)
+            // Restaurant 객체 생성
             let restaurant: Restaurant?
-            let storeName = self.storeNameRelay.value
+            let storeName = self.storeNameRelay.value.isEmpty ? self.selectedFood.place : self.storeNameRelay.value
             if !storeName.isEmpty {
                 restaurant = Restaurant(
                     name: storeName,
                     latitude: 0.0, // TODO: 실제 위치 데이터 사용
-                    longitude: 0.0
+                    longitude: 0.0,
+                    cuisine: self.selectedFood.cuisine // 대분류 (한식/중식/일식)
                 )
             } else {
                 restaurant = nil
