@@ -25,11 +25,13 @@ class TransitionManager {
         
         let page1 = UINavigationController(rootViewController: FoodRecommendViewController())
         let page2 = UINavigationController(rootViewController: FoodMapViewController())
+        let page3 = UINavigationController(rootViewController: CalendarViewController())
 
         page1.view.backgroundColor = .customBackground
         page2.view.backgroundColor = .customBackground
+        page3.view.backgroundColor = .customBackground
         
-        tabBarController.setViewControllers([page1, page2], animated: true)
+        tabBarController.setViewControllers([page1, page2, page3], animated: true)
         
         if let items = tabBarController.tabBar.items {
             items[0].selectedImage = UIImage(systemName: SFsymbol.starBubbleFill.rawValue)
@@ -37,6 +39,9 @@ class TransitionManager {
             
             items[1].selectedImage = UIImage(systemName: SFsymbol.mapFill.rawValue)
             items[1].image = UIImage(systemName: SFsymbol.mapFill.rawValue)
+            
+            items[2].selectedImage = UIImage(systemName: SFsymbol.calendar.rawValue)
+            items[2].image = UIImage(systemName: SFsymbol.calendar.rawValue)
         }
         
         return tabBarController

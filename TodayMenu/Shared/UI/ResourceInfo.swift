@@ -10,6 +10,7 @@ import Foundation
 enum SFsymbol: String {
     case starBubbleFill = "star.bubble.fill"
     case mapFill = "map.fill"
+    case calendar = "calendar"
 }
 
 enum FontSize {
