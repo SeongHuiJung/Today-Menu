@@ -71,7 +71,8 @@ final class RestaurantSearchView: BaseView {
         tableView.backgroundColor = .white
         tableView.separatorStyle = .singleLine
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        tableView.rowHeight = 85
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 85
         return tableView
     }()
     

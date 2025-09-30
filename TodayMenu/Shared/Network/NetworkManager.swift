@@ -27,6 +27,7 @@ final class NetworkManager {
  
                     switch response.result {
                     case .success(let value):
+                        observer.onNext(.success(value))
                         observer.onCompleted()
                     case .failure:
                         
