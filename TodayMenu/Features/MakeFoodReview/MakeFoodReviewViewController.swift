@@ -18,6 +18,7 @@ final class MakeFoodReviewViewController: BaseViewController {
     
     // 선택된 식당 정보
     private var selectedRestaurant: RestaurantData?
+    private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
     
     private let saveButton = {
         let button = UIButton()
@@ -80,6 +81,7 @@ extension MakeFoodReviewViewController {
         mainView.removeRestaurantButton.rx.tap
             .subscribe(with: self) { owner, _ in
                 owner.selectedRestaurant = nil
+                owner.selectedRestaurantRelay.accept(nil)
                 owner.mainView.hideSelectedRestaurant()
             }
             .disposed(by: disposeBag)
@@ -92,6 +94,7 @@ extension MakeFoodReviewViewController {
         // 식당 선택 콜백 설정
         searchVC.onRestaurantSelected = { [weak self] restaurant in
             self?.selectedRestaurant = restaurant
+            self?.selectedRestaurantRelay.accept(restaurant)
             self?.mainView.showSelectedRestaurant(restaurant)
         }
         
@@ -126,7 +129,8 @@ extension MakeFoodReviewViewController {
             storeNameText: Observable.just(""), // 검색 버튼으로 대체
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
             companionText: mainView.companionTextField.rx.text.orEmpty.asObservable(),
-            datePickerValueChanged: mainView.datePicker.rx.value.asObservable()
+            datePickerValueChanged: mainView.datePicker.rx.value.asObservable(),
+            selectedRestaurant: selectedRestaurantRelay.asObservable()
         )
         
         let output = viewModel.transform(input)

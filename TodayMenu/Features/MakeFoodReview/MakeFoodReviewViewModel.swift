@@ -26,6 +26,7 @@ final class MakeFoodReviewViewModel {
         let commentText: Observable<String>
         let companionText: Observable<String>
         let datePickerValueChanged: Observable<Date>
+        let selectedRestaurant: Observable<RestaurantData?>
     }
     
     struct Output {
@@ -51,6 +52,7 @@ final class MakeFoodReviewViewModel {
     private let companionNameRelay = BehaviorRelay<String>(value: "")
     private let foodNameRelay = BehaviorRelay<String>(value: "")
     private let storeNameRelay = BehaviorRelay<String>(value: "")
+    private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
     
     init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
@@ -85,6 +87,11 @@ final class MakeFoodReviewViewModel {
         // 식당 이름 처리
         input.storeNameText
             .bind(to: storeNameRelay)
+            .disposed(by: disposeBag)
+        
+        // 선택된 식당 정보 처리
+        input.selectedRestaurant
+            .bind(to: selectedRestaurantRelay)
             .disposed(by: disposeBag)
         
         let eatTimeDisplay = eatTimeRelay
@@ -259,15 +266,21 @@ extension MakeFoodReviewViewModel {
             
             // Restaurant 객체 생성
             let restaurant: Restaurant?
-            let storeName = self.storeNameRelay.value.isEmpty ? self.selectedFood.place : self.storeNameRelay.value
-            if !storeName.isEmpty {
+            
+            // 선택된 식당 정보가 있으면 사용
+            if let selectedRestaurant = self.selectedRestaurantRelay.value {
+                let latitude = Double(selectedRestaurant.latitude) ?? 0.0
+                let longitude = Double(selectedRestaurant.longitude) ?? 0.0
+                
                 restaurant = Restaurant(
-                    name: storeName,
-                    latitude: 0.0, // TODO: 실제 위치 데이터 사용
-                    longitude: 0.0,
-                    cuisine: self.selectedFood.cuisine // 대분류 (한식/중식/일식)
+                    name: selectedRestaurant.restaurantName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    cuisine: "korean"
                 )
-            } else {
+            }
+            // 선택된 식당 정보가 없으면 식당 정보를 저장하지 않음
+            else {
                 restaurant = nil
             }
             
