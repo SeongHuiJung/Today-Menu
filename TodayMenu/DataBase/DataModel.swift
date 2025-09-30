@@ -64,18 +64,20 @@ class Restaurant: Object {
     @Persisted var latitude: Double // 위도
     @Persisted var longitude: Double // 경도
     @Persisted var cuisine: String // 한중일 등 음식 카테고리
+    @Persisted var restaurantId: String // 식당 고유번호
     
     // Inverse Relationship
     @Persisted(originProperty: "restaurant")
     var reviews: LinkingObjects<Review> // 리뷰 역참조
     
-    convenience init(name: String, latitude: Double, longitude: Double, cuisine: String = "") {
+    convenience init(name: String, latitude: Double, longitude: Double, cuisine: String = "", restaurantId: String) {
         self.init()
         
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
         self.cuisine = cuisine
+        self.restaurantId = restaurantId
     }
 }
 

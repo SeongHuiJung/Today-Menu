@@ -276,7 +276,8 @@ extension MakeFoodReviewViewModel {
                     name: selectedRestaurant.restaurantName,
                     latitude: latitude,
                     longitude: longitude,
-                    cuisine: "korean"
+                    cuisine: "korean",
+                    restaurantId: selectedRestaurant.restaurantId
                 )
             }
             // 선택된 식당 정보가 없으면 식당 정보를 저장하지 않음

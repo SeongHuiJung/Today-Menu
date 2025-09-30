@@ -12,7 +12,7 @@ struct MapData: Decodable {
 }
 
 struct RestaurantData: Decodable {
-    let id: String
+    let restaurantId: String
     let longitude: String
     let latitude: String
     let restaurantName: String
@@ -21,7 +21,7 @@ struct RestaurantData: Decodable {
     let addressName: String
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case restaurantId = "id"
         case longitude = "x"
         case latitude = "y"
         case restaurantName = "place_name"
@@ -32,7 +32,7 @@ struct RestaurantData: Decodable {
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(String.self, forKey: .id)
+        self.restaurantId = try container.decode(String.self, forKey: .restaurantId)
         self.longitude = try container.decode(String.self, forKey: .longitude)
         self.latitude = try container.decode(String.self, forKey: .latitude)
         self.restaurantName = try container.decode(String.self, forKey: .restaurantName)
