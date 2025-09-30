@@ -56,7 +56,7 @@ final class MakeFoodReviewView: BaseView {
     
     // 선택 정보
     let optionalInfoLabel = BasicLabel(text: "선택 정보", alignment: .left, size: FontSize.subTitle, weight: .semibold)
-    let storeNameLabel = BasicLabel(text: "식당 이름", alignment: .left, size: FontSize.regular, weight: .medium)
+    let storeNameLabel = BasicLabel(text: "식당 정보", alignment: .left, size: FontSize.regular, weight: .medium)
     
     // 식당 검색 버튼
     let restaurantSearchButton = {
@@ -69,6 +69,39 @@ final class MakeFoodReviewView: BaseView {
         button.titleLabel?.font = .systemFont(ofSize: FontSize.regular)
         button.setTitle("🔍 식당 검색", for: .normal)
         button.setTitleColor(.darkGray, for: .normal)
+        return button
+    }()
+    
+    // 선택된 식당 정보 뷰
+    let selectedRestaurantView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(named: "point")?.withAlphaComponent(0.1)
+        view.layer.cornerRadius = 8
+        view.layer.borderWidth = 2
+        view.layer.borderColor = UIColor(named: "point")?.cgColor
+        view.isHidden = true
+        return view
+    }()
+    
+    let selectedRestaurantNameLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: FontSize.subTitle, weight: .bold)
+        label.textColor = .black
+        return label
+    }()
+    
+    let selectedRestaurantAddressLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: FontSize.regular)
+        label.textColor = .darkGray
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    let removeRestaurantButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        button.tintColor = UIColor(named: "point")
         return button
     }()
     
@@ -128,13 +161,16 @@ final class MakeFoodReviewView: BaseView {
         
         [requiredInfoLabel, foodNameLabel, foodNameTextField, ratingLabel, starStackView, ratingPromptLabel,
          eatTimeLabel, datePickerContainer, datePicker, optionalInfoLabel, storeNameLabel, restaurantSearchButton,
-         commentLabel, commentTextView, taggedPeopleLabel,
+         selectedRestaurantView, commentLabel, commentTextView, taggedPeopleLabel,
          tagStackView, companionTextField, photoSectionLabel, photoUploadView].forEach {
             contentView.addSubview($0)
         }
         
         [datePickerButton].forEach { datePickerContainer.addSubview($0) }
         [cameraImageView, photoPromptLabel, photoSubLabel].forEach { photoUploadView.addSubview($0) }
+        [selectedRestaurantNameLabel, selectedRestaurantAddressLabel, removeRestaurantButton].forEach {
+            selectedRestaurantView.addSubview($0)
+        }
     }
     override func configureLayout() {
         scrollView.snp.makeConstraints {
@@ -216,8 +252,33 @@ final class MakeFoodReviewView: BaseView {
             $0.height.equalTo(50)
         }
         
+        selectedRestaurantView.snp.makeConstraints {
+            $0.top.equalTo(storeNameLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.greaterThanOrEqualTo(80)
+        }
+        
+        selectedRestaurantNameLabel.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(12)
+            $0.leading.equalToSuperview().offset(16)
+            $0.trailing.equalTo(removeRestaurantButton.snp.leading).offset(-12)
+        }
+        
+        selectedRestaurantAddressLabel.snp.makeConstraints {
+            $0.top.equalTo(selectedRestaurantNameLabel.snp.bottom).offset(6)
+            $0.leading.equalToSuperview().offset(16)
+            $0.trailing.equalTo(removeRestaurantButton.snp.leading).offset(-12)
+            $0.bottom.equalToSuperview().offset(-12)
+        }
+        
+        removeRestaurantButton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(12)
+            $0.trailing.equalToSuperview().offset(-16)
+            $0.width.height.equalTo(24)
+        }
+        
         commentLabel.snp.makeConstraints {
-            $0.top.equalTo(restaurantSearchButton.snp.bottom).offset(20)
+            $0.top.equalTo(selectedRestaurantView.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -361,5 +422,22 @@ extension MakeFoodReviewView {
     
     func populateInitialData(foodName: String, storeName: String) {
         foodNameTextField.text = foodName
+    }
+    
+    func showSelectedRestaurant(_ restaurant: RestaurantData) {
+        selectedRestaurantNameLabel.text = restaurant.restaurantName
+        selectedRestaurantAddressLabel.text = restaurant.addressName
+        
+        // 버튼 숨기고 선택된 뷰 표시
+        restaurantSearchButton.isHidden = true
+        selectedRestaurantView.isHidden = false
+    }
+    
+    func hideSelectedRestaurant() {
+        selectedRestaurantView.isHidden = true
+        restaurantSearchButton.isHidden = false
+        
+        selectedRestaurantNameLabel.text = ""
+        selectedRestaurantAddressLabel.text = ""
     }
 }

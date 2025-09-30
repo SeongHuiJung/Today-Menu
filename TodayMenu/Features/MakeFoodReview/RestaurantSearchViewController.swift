@@ -15,6 +15,9 @@ final class RestaurantSearchViewController: BaseViewController {
     private let viewModel = RestaurantSearchViewModel()
     private let disposeBag = DisposeBag()
     
+    // 식당 선택 콜백
+    var onRestaurantSelected: ((RestaurantData) -> Void)?
+    
     override func loadView() {
         view = mainView
     }
@@ -83,6 +86,14 @@ final class RestaurantSearchViewController: BaseViewController {
         mainView.searchTextField.rx.controlEvent(.editingDidEndOnExit)
             .subscribe(with: self) { owner, _ in
                 owner.mainView.searchButton.sendActions(for: .touchUpInside)
+            }
+            .disposed(by: disposeBag)
+        
+        // 테이블뷰 셀 선택 처리
+        mainView.tableView.rx.modelSelected(RestaurantData.self)
+            .subscribe(with: self) { owner, restaurant in
+                owner.onRestaurantSelected?(restaurant)
+                owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
     }

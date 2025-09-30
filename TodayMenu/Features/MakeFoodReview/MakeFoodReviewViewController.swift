@@ -16,6 +16,9 @@ final class MakeFoodReviewViewController: BaseViewController {
     private let disposeBag = DisposeBag()
     private let menuSelectedTime: Date
     
+    // 선택된 식당 정보
+    private var selectedRestaurant: RestaurantData?
+    
     private let saveButton = {
         let button = UIButton()
         button.setTitle("저장", for: .normal)
@@ -38,6 +41,7 @@ final class MakeFoodReviewViewController: BaseViewController {
         super.viewDidLoad()
         setupNavigationBar()
         setupRestaurantSearchButton()
+        setupRemoveRestaurantButton()
         bind()
     }
     
@@ -72,9 +76,25 @@ extension MakeFoodReviewViewController {
             .disposed(by: disposeBag)
     }
     
+    private func setupRemoveRestaurantButton() {
+        mainView.removeRestaurantButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.selectedRestaurant = nil
+                owner.mainView.hideSelectedRestaurant()
+            }
+            .disposed(by: disposeBag)
+    }
+    
     private func presentRestaurantSearch() {
         let searchVC = RestaurantSearchViewController()
         searchVC.modalPresentationStyle = .fullScreen
+        
+        // 식당 선택 콜백 설정
+        searchVC.onRestaurantSelected = { [weak self] restaurant in
+            self?.selectedRestaurant = restaurant
+            self?.mainView.showSelectedRestaurant(restaurant)
+        }
+        
         present(searchVC, animated: true)
     }
 }
