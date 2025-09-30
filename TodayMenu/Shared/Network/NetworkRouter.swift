@@ -27,7 +27,7 @@ enum NetworkRouter {
     
     var method: HTTPMethod {
         switch self {
-        case .searchPlace: HTTPMethod.post
+        case .searchPlace: HTTPMethod.get
         }
     }
     
@@ -42,7 +42,7 @@ enum NetworkRouter {
     
     var encodingType: ParameterEncoding {
         switch self {
-        case .searchPlace: JSONEncoding.default
+        case .searchPlace: URLEncoding.default
         }
     }
     

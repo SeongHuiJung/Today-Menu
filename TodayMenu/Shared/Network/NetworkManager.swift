@@ -15,6 +15,7 @@ final class NetworkManager {
     
     func callRequest<T: Decodable>(router: NetworkRouter, decodingType: T.Type) -> Observable<Result<T, ErrorType>> {
             return Observable<Result<T, ErrorType>>.create { observer in
+                dump(router)
                 let url = router.URL
                 AF.request(url,
                            method: router.method,
@@ -26,7 +27,6 @@ final class NetworkManager {
  
                     switch response.result {
                     case .success(let value):
-                        observer.onNext(.success(value))
                         observer.onCompleted()
                     case .failure:
                         
