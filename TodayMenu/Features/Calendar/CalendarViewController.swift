@@ -8,43 +8,172 @@
 import UIKit
 import FSCalendar
 import SnapKit
+import RxSwift
 
 class CalendarViewController: BaseViewController {
+    
+    private let disposeBag = DisposeBag()
+    private let repository = ReviewRepository()
     
     private let calendar: FSCalendar = {
         let calendar = FSCalendar()
         calendar.backgroundColor = .white
-        calendar.appearance.headerTitleColor = .black
-        calendar.appearance.weekdayTextColor = .darkGray
-        calendar.appearance.todayColor = .point
-        calendar.appearance.selectionColor = .point
-        calendar.appearance.titleDefaultColor = .black
-        calendar.appearance.titleWeekendColor = .systemRed
         calendar.locale = Locale(identifier: "ko_KR")
         calendar.scrollDirection = .horizontal
         calendar.scope = .month
+        calendar.placeholderType = .none
+        calendar.headerHeight = 60
+        calendar.weekdayHeight = 40
+        
+        // 헤더 스타일
+        calendar.appearance.headerTitleColor = .black
+        calendar.appearance.headerTitleFont = .systemFont(ofSize: 18, weight: .bold)
+        calendar.appearance.headerDateFormat = "yyyy년 M월"
+        calendar.appearance.headerMinimumDissolvedAlpha = 0.0
+        
+        // 요일 스타일
+        calendar.appearance.weekdayTextColor = .darkGray
+        calendar.appearance.weekdayFont = .systemFont(ofSize: 14, weight: .medium)
+        
+        // 날짜 숨기기 (커스텀 셀에서 표시)
+        calendar.appearance.titleDefaultColor = .clear
+        calendar.appearance.titleWeekendColor = .clear
+        calendar.appearance.titleTodayColor = .clear
+        calendar.appearance.titleSelectionColor = .clear
+        
+        // 선택/오늘 배경 제거
+        calendar.appearance.todayColor = .clear
+        calendar.appearance.selectionColor = .clear
+        calendar.appearance.borderRadius = 0
+        
         return calendar
     }()
+    
+    // 날짜별 리뷰 데이터 저장
+    private var reviewsByDate: [String: [Review]] = [:]
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        setupCalendar()
+        loadReviews()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadReviews()
+    }
+    
+    override func configureHierarchy() {
+        super.configureHierarchy()
+        
+        view.addSubview(calendar)
+    }
+    
+    override func configureLayout() {
+        super.configureLayout()
+        
+        calendar.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
     }
     
     override func configureView() {
         super.configureView()
         view.backgroundColor = .white
-        title = "캘린더"
-        navigationController?.navigationBar.prefersLargeTitles = false
+        title = "음식 History"
     }
     
-    private func setupUI() {
-        view.addSubview(calendar)
+    private func setupCalendar() {
+        calendar.dataSource = self
+        calendar.delegate = self
         
-        calendar.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(300)
+        calendar.register(CalendarReviewCell.self, forCellReuseIdentifier: "reviewCell")
+        calendar.register(CalendarEmptyCell.self, forCellReuseIdentifier: "emptyCell")
+    }
+    
+    private func loadReviews() {
+        repository.fetchAllReviews()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] reviews in
+                self?.organizeReviewsByDate(reviews)
+                self?.calendar.reloadData()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func organizeReviewsByDate(_ reviews: [Review]) {
+        reviewsByDate.removeAll()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        for review in reviews {
+            let dateKey = dateFormatter.string(from: review.ateAt)
+            if reviewsByDate[dateKey] == nil {
+                reviewsByDate[dateKey] = []
+            }
+            reviewsByDate[dateKey]?.append(review)
         }
+    }
+    
+    private func getReviews(for date: Date) -> [Review] {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateKey = dateFormatter.string(from: date)
+        return reviewsByDate[dateKey] ?? []
+    }
+}
+
+// MARK: - FSCalendarDataSource
+
+extension CalendarViewController: FSCalendarDataSource {
+    
+    func calendar(_ calendar: FSCalendar, cellFor date: Date, at position: FSCalendarMonthPosition) -> FSCalendarCell {
+        let reviews = getReviews(for: date)
+        
+        if !reviews.isEmpty {
+            let cell = calendar.dequeueReusableCell(withIdentifier: "reviewCell", for: date, at: position) as! CalendarReviewCell
+            
+            let day = Calendar.current.component(.day, from: date)
+            let firstReview = reviews.first!
+            let foodName = firstReview.food.first?.name ?? "음식"
+            let photoPath = firstReview.photos.first
+            
+            cell.configure(date: day, foodName: foodName, photoPath: photoPath)
+            
+            return cell
+        } else {
+            let cell = calendar.dequeueReusableCell(withIdentifier: "emptyCell", for: date, at: position) as! CalendarEmptyCell
+            
+            let day = Calendar.current.component(.day, from: date)
+            let weekday = Calendar.current.component(.weekday, from: date)
+            let isWeekend = weekday == 1 || weekday == 7
+            
+            cell.configure(date: day, isWeekend: isWeekend)
+            
+            return cell
+        }
+    }
+}
+
+// MARK: - FSCalendarDelegate
+extension CalendarViewController: FSCalendarDelegate {
+    
+    func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
+        let reviews = getReviews(for: date)
+        
+        if !reviews.isEmpty {
+            print("선택된 날짜: \(date), 리뷰 개수: \(reviews.count)")
+            // TODO: 상세 화면으로 이동
+        }
+    }
+    
+    func calendar(_ calendar: FSCalendar, boundingRectWillChange bounds: CGRect, animated: Bool) {
+        calendar.snp.updateConstraints {
+            $0.height.equalTo(bounds.height)
+        }
+        view.layoutIfNeeded()
     }
 }
