@@ -16,6 +16,16 @@ final class FoodMapView: BaseView {
         map.showsUserLocation = true
         map.showsCompass = true
         map.showsScale = true
+        map.mapType = .mutedStandard
+        
+        map.pointOfInterestFilter = MKPointOfInterestFilter(including: [
+            .restaurant,
+            .cafe,
+            .bakery,
+            .brewery,
+            .winery
+        ])
+        
         return map
     }()
     
@@ -36,9 +46,14 @@ final class FoodMapView: BaseView {
         return button
     }()
     
+    let floatingView = RestaurantDetailFloatingView()
+    
     override func configureHierarchy() {
         addSubview(mapView)
         addSubview(locationButton)
+        addSubview(floatingView)
+        
+        floatingView.isHidden = true
     }
     
     override func configureLayout() {
@@ -51,9 +66,40 @@ final class FoodMapView: BaseView {
             make.bottom.equalTo(safeAreaLayoutGuide).inset(20)
             make.width.height.equalTo(56)
         }
+        
+        floatingView.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(safeAreaLayoutGuide).offset(250) // 초기에는 화면 밖에
+            make.height.equalTo(250)
+        }
     }
     
     override func configureView() {
         backgroundColor = .white
+    }
+    
+    func showFloatingView(restaurantName: String, lastVisit: Date, averageRating: Double, cuisine: String) {
+        floatingView.configure(restaurantName: restaurantName, lastVisit: lastVisit, averageRating: averageRating, cuisine: cuisine)
+        floatingView.isHidden = false
+        
+        floatingView.snp.updateConstraints { make in
+            make.bottom.equalTo(safeAreaLayoutGuide).offset(0)
+        }
+        
+        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseOut) {
+            self.layoutIfNeeded()
+        }
+    }
+    
+    func hideFloatingView() {
+        floatingView.snp.updateConstraints { make in
+            make.bottom.equalTo(safeAreaLayoutGuide).offset(250)
+        }
+        
+        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseIn, animations: {
+            self.layoutIfNeeded()
+        }) { _ in
+            self.floatingView.isHidden = true
+        }
     }
 }

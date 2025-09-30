@@ -276,7 +276,7 @@ extension MakeFoodReviewViewModel {
                     name: selectedRestaurant.restaurantName,
                     latitude: latitude,
                     longitude: longitude,
-                    cuisine: "korean",
+                    cuisine: selectedRestaurant.categoryName,
                     restaurantId: selectedRestaurant.restaurantId
                 )
             }

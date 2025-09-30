@@ -16,6 +16,7 @@ final class FoodMapViewController: UIViewController {
     private let viewModel = FoodMapViewModel()
     private let disposeBag = DisposeBag()
     private let mainView = FoodMapView()
+    private let repository = ReviewRepository()
     
     private let viewWillAppearSubject = PublishRelay<Void>()
     
@@ -42,6 +43,12 @@ final class FoodMapViewController: UIViewController {
     
     private func setupMapView() {
         mainView.mapView.showsUserLocation = true
+        mainView.mapView.delegate = self
+        
+        
+        mainView.floatingView.onClose = { [weak self] in
+            self?.mainView.hideFloatingView()
+        }
     }
     
     private func bind() {
@@ -52,7 +59,6 @@ final class FoodMapViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
-        // 위치 업데이트
         output.locationUpdate
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] location in
@@ -60,7 +66,6 @@ final class FoodMapViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 권한 상태 변경
         output.authorizationStatus
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] status in
@@ -68,12 +73,10 @@ final class FoodMapViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 위치 에러
         output.locationError
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] error in
                 self?.showLocationError(error)
-                // 에러 발생 시 기본 위치로 이동
                 if case .locationServiceDisabled = error {
                     self?.moveMapToLocation(CLLocationCoordinate2D(latitude: 37.4921, longitude: 127.0232))
                 } else if case .authorizationDenied = error {
@@ -82,7 +85,6 @@ final class FoodMapViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 식당 마커 표시
         output.restaurants
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] restaurants in
@@ -133,14 +135,14 @@ final class FoodMapViewController: UIViewController {
         
         present(alert, animated: true)
     }
-    
-    // 식당 Annotations
+}
+
+// MARK: - Restaurant Annotations
+extension FoodMapViewController {
     private func addRestaurantAnnotations(_ restaurants: [Restaurant]) {
-        // 기존 어노테이션 제거 (사용자 위치 제외)
         let existingAnnotations = mainView.mapView.annotations.filter { !($0 is MKUserLocation) }
         mainView.mapView.removeAnnotations(existingAnnotations)
         
-        // 새로운 어노테이션 추가
         let annotations = restaurants.map { restaurant in
             RestaurantAnnotation(
                 coordinate: CLLocationCoordinate2D(
@@ -148,24 +150,70 @@ final class FoodMapViewController: UIViewController {
                     longitude: restaurant.longitude
                 ),
                 title: restaurant.name,
-                subtitle: restaurant.cuisine
+                subtitle: restaurant.cuisine,
+                restaurant: restaurant
             )
         }
         
         mainView.mapView.addAnnotations(annotations)
     }
+    
+    private func showRestaurantDetail(for restaurant: Restaurant) {
+        repository.fetchReviewsByRestaurantId(restaurantId: restaurant.restaurantId)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] reviews in
+                guard let self = self else { return }
+                self.displayRestaurantInfo(restaurant: restaurant, reviews: reviews)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func displayRestaurantInfo(restaurant: Restaurant, reviews: [Review]) {
+        guard !reviews.isEmpty else { return }
+        
+        let lastVisit = reviews.map { $0.ateAt }.max() ?? Date()
+        let averageRating = reviews.reduce(0.0) { $0 + $1.rating } / Double(reviews.count)
+        
+        mainView.showFloatingView(
+            restaurantName: restaurant.name,
+            lastVisit: lastVisit,
+            averageRating: averageRating,
+            cuisine: restaurant.cuisine
+        )
+    }
+}
+
+// MARK: - MKMapViewDelegate
+
+extension FoodMapViewController: MKMapViewDelegate {
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        guard let annotation = view.annotation as? RestaurantAnnotation,
+              let restaurant = annotation.restaurant else {
+            return
+        }
+        print(#function)
+        showRestaurantDetail(for: restaurant)
+    }
+    
+    func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
+        mainView.hideFloatingView()
+    }
 }
 
 // MARK: - RestaurantAnnotation
+
 class RestaurantAnnotation: NSObject, MKAnnotation {
     let coordinate: CLLocationCoordinate2D
     let title: String?
     let subtitle: String?
+    let restaurant: Restaurant?
     
-    init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?) {
+    init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, restaurant: Restaurant? = nil) {
         self.coordinate = coordinate
         self.title = title
         self.subtitle = subtitle
+        self.restaurant = restaurant
         super.init()
     }
 }

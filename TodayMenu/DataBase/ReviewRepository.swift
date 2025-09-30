@@ -59,6 +59,18 @@ final class ReviewRepository {
         }
     }
     
+    
+    func fetchReviewsByRestaurantId(restaurantId: String) -> Observable<[Review]> {
+        return Observable.create { observer in
+            let reviews = self.realm.objects(Review.self).where {
+                $0.restaurant.restaurantId == restaurantId
+            }
+            observer.onNext(Array(reviews))
+            observer.onCompleted()
+            return Disposables.create()
+        }
+    }
+    
     // MARK: - Update
     func updateReview(_ review: Review) -> Observable<Result<Void, Error>> {
         return Observable.create { observer in
