@@ -8,10 +8,13 @@
 import Foundation
 import RxSwift
 import RxCocoa
+import CoreLocation
 
-final class RestaurantSearchViewModel {
+final class RestaurantSearchViewModel: NSObject {
     
     private let disposeBag = DisposeBag()
+    private lazy var locationManager = CLLocationManager()
+    private let currentLocationRelay = BehaviorRelay<CLLocation?>(value: nil)
     
     struct Input {
         let searchButtonTapped: Observable<Void>
@@ -23,9 +26,42 @@ final class RestaurantSearchViewModel {
         let errorMessage: Driver<String>
     }
     
+    private let errorMessage = PublishRelay<String>()
+    
+    override init() {
+        super.init()
+        setupLocationManager()
+        requestLocation()
+    }
+    
+    private func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    private func requestLocation() {
+        let status: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            status = locationManager.authorizationStatus
+        } else {
+            status = CLLocationManager.authorizationStatus()
+        }
+        
+        switch status {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .denied, .restricted:
+            errorMessage.accept(LocationError.authorizationDenied.message)
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        default:
+            // TODO: 위치 권한 껐을때 처리
+            break
+        }
+    }
+    
     func transform(input: Input) -> Output {
         let searchResults = PublishRelay<[RestaurantData]>()
-        let errorMessage = PublishRelay<String>()
         
         // 검색 버튼 탭 처리
         input.searchButtonTapped
@@ -35,11 +71,11 @@ final class RestaurantSearchViewModel {
                 guard let self = self else { return .empty() }
                 return self.searchRestaurant(query: query)
             }
-            .subscribe(onNext: { restaurants in
+            .subscribe(with: self) { owner, restaurants in
                 searchResults.accept(restaurants)
-            }, onError: { error in
-                errorMessage.accept("검색 중 오류가 발생했습니다.")
-            })
+            } onError: { owner, _ in
+                owner.errorMessage.accept("검색 중 오류가 발생했습니다.")
+            }
             .disposed(by: disposeBag)
         
         return Output(
@@ -49,9 +85,19 @@ final class RestaurantSearchViewModel {
     }
     
     private func searchRestaurant(query: String) -> Observable<[RestaurantData]> {
-        // 임시 좌표값 (서울 시청 기준)
-        let latitude = "37.5665"
-        let longitude = "126.9780"
+        // 현재 위치 가져오기
+        let location = currentLocationRelay.value
+        let latitude: String
+        let longitude: String
+        
+        if let location = location {
+            latitude = String(location.coordinate.latitude)
+            longitude = String(location.coordinate.longitude)
+        } else {
+            // 위치를 가져오지 못한 경우 기본 위치 값 지정
+            latitude = "37.5665"
+            longitude = "126.9780"
+        }
         
         let searchDataSet = NetworkRouter.SearchPlaceDataSet(
             query: query,
@@ -71,5 +117,25 @@ final class RestaurantSearchViewModel {
                     return []
                 }
             }
+    }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension RestaurantSearchViewModel: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else { return }
+        currentLocationRelay.accept(location)
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        requestLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        requestLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("위치 가져오기 실패: \(error.localizedDescription)")
     }
 }
