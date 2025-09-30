@@ -19,6 +19,7 @@ final class FoodMapViewController: UIViewController {
     private let repository = ReviewRepository()
     
     private let viewWillAppearSubject = PublishRelay<Void>()
+    private var currentRestaurant: Restaurant?
     
     override func loadView() {
         view = mainView
@@ -45,9 +46,12 @@ final class FoodMapViewController: UIViewController {
         mainView.mapView.showsUserLocation = true
         mainView.mapView.delegate = self
         
-        
         mainView.floatingView.onClose = { [weak self] in
             self?.mainView.hideFloatingView()
+        }
+    
+        mainView.floatingView.onReviewButtonTap = { [weak self] in
+            self?.showReviewList()
         }
     }
     
@@ -135,6 +139,13 @@ final class FoodMapViewController: UIViewController {
         
         present(alert, animated: true)
     }
+    
+    private func showReviewList() {
+        guard let restaurant = currentRestaurant else { return }
+        
+        let reviewListVC = RestaurantReviewListViewController(restaurant: restaurant)
+        navigationController?.pushViewController(reviewListVC, animated: true)
+    }
 }
 
 // MARK: - Restaurant Annotations
@@ -159,6 +170,7 @@ extension FoodMapViewController {
     }
     
     private func showRestaurantDetail(for restaurant: Restaurant) {
+        currentRestaurant = restaurant
         repository.fetchReviewsByRestaurantId(restaurantId: restaurant.restaurantId)
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] reviews in
@@ -192,7 +204,6 @@ extension FoodMapViewController: MKMapViewDelegate {
               let restaurant = annotation.restaurant else {
             return
         }
-        print(#function)
         showRestaurantDetail(for: restaurant)
     }
     
