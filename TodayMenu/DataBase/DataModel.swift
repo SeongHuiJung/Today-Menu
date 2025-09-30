@@ -47,7 +47,7 @@ class Food: Object {
     
     // Inverse Relationship
     @Persisted(originProperty: "food")
-    var reviews: LinkingObjects<Review> // 리뷰 역참조
+    var review: LinkingObjects<Review> // 리뷰 역참조
     
     convenience init(name: String, cuisine: String = "", category: String = "") {
         self.init()
@@ -68,7 +68,7 @@ class Restaurant: Object {
     
     // Inverse Relationship
     @Persisted(originProperty: "restaurant")
-    var reviews: LinkingObjects<Review> // 리뷰 역참조
+    var review: LinkingObjects<Review> // 리뷰 역참조
     
     convenience init(name: String, latitude: Double, longitude: Double, cuisine: String = "", restaurantId: String) {
         self.init()
@@ -88,7 +88,7 @@ class Companion: Object {
     
     // Inverse Relationship
     @Persisted(originProperty: "companion")
-    var reviews: LinkingObjects<Review> // 함께 먹은 리뷰 역참조
+    var review: LinkingObjects<Review> // 함께 먹은 리뷰 역참조
     
     convenience init(type: CompanionType, name: String? = nil) {
         self.init()
