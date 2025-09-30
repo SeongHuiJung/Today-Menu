@@ -17,6 +17,8 @@ final class FoodMapViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let mainView = FoodMapView()
     
+    private let viewWillAppearSubject = PublishRelay<Void>()
+    
     override func loadView() {
         view = mainView
     }
@@ -26,6 +28,11 @@ final class FoodMapViewController: UIViewController {
         setupNavigationBar()
         setupMapView()
         bind()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewWillAppearSubject.accept(())
     }
     
     private func setupNavigationBar() {
@@ -39,7 +46,8 @@ final class FoodMapViewController: UIViewController {
     
     private func bind() {
         let input = FoodMapViewModel.Input(
-            showCurrentLocationTap: mainView.locationButton.rx.tap.asObservable().startWith(())
+            showCurrentLocationTap: mainView.locationButton.rx.tap.asObservable().startWith(()),
+            viewWillAppear: viewWillAppearSubject.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -71,6 +79,14 @@ final class FoodMapViewController: UIViewController {
                 } else if case .authorizationDenied = error {
                     self?.moveMapToLocation(CLLocationCoordinate2D(latitude: 37.4921, longitude: 127.0232))
                 }
+            })
+            .disposed(by: disposeBag)
+        
+        // 식당 마커 표시
+        output.restaurants
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] restaurants in
+                self?.addRestaurantAnnotations(restaurants)
             })
             .disposed(by: disposeBag)
     }
@@ -116,5 +132,40 @@ final class FoodMapViewController: UIViewController {
         }
         
         present(alert, animated: true)
+    }
+    
+    // 식당 Annotations
+    private func addRestaurantAnnotations(_ restaurants: [Restaurant]) {
+        // 기존 어노테이션 제거 (사용자 위치 제외)
+        let existingAnnotations = mainView.mapView.annotations.filter { !($0 is MKUserLocation) }
+        mainView.mapView.removeAnnotations(existingAnnotations)
+        
+        // 새로운 어노테이션 추가
+        let annotations = restaurants.map { restaurant in
+            RestaurantAnnotation(
+                coordinate: CLLocationCoordinate2D(
+                    latitude: restaurant.latitude,
+                    longitude: restaurant.longitude
+                ),
+                title: restaurant.name,
+                subtitle: restaurant.cuisine
+            )
+        }
+        
+        mainView.mapView.addAnnotations(annotations)
+    }
+}
+
+// MARK: - RestaurantAnnotation
+class RestaurantAnnotation: NSObject, MKAnnotation {
+    let coordinate: CLLocationCoordinate2D
+    let title: String?
+    let subtitle: String?
+    
+    init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?) {
+        self.coordinate = coordinate
+        self.title = title
+        self.subtitle = subtitle
+        super.init()
     }
 }

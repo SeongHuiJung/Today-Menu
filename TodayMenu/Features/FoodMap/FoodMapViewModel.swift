@@ -15,14 +15,17 @@ final class FoodMapViewModel: NSObject {
     
     private let disposeBag = DisposeBag()
     private lazy var locationManager = CLLocationManager()
+    private let repository = ReviewRepository()
     
     // Subjects
     private let locationUpdateSubject = PublishSubject<CLLocation>()
     private let authorizationStatusSubject = PublishSubject<CLAuthorizationStatus>()
     private let locationErrorSubject = PublishSubject<LocationError>()
+    private let restaurantsSubject = BehaviorSubject<[Restaurant]>(value: [])
     
     struct Input {
         let showCurrentLocationTap: Observable<Void>
+        let viewWillAppear: Observable<Void>
     }
     
     struct Output {
@@ -30,6 +33,7 @@ final class FoodMapViewModel: NSObject {
         let authorizationStatus: Observable<CLAuthorizationStatus>
         let locationError: Observable<LocationError>
         let initialLocation: Observable<CLLocationCoordinate2D>
+        let restaurants: Observable<[Restaurant]>
     }
     
     override init() {
@@ -41,9 +45,16 @@ final class FoodMapViewModel: NSObject {
     func transform(input: Input) -> Output {
         // 위치 버튼 탭
         input.showCurrentLocationTap
-            .subscribe(onNext: { [weak self] in
-                self?.checkDeviceLocationSetting()
-            })
+            .bind(with: self) { owner, _ in
+                owner.checkDeviceLocationSetting()
+            }
+            .disposed(by: disposeBag)
+        
+        // 뷰가 나타날 때마다 레스토랑 데이터 로드
+        input.viewWillAppear
+            .bind(with: self) { owner, _ in
+                owner.loadRestaurants()
+            }
             .disposed(by: disposeBag)
         
         // 초기 위치
@@ -53,11 +64,11 @@ final class FoodMapViewModel: NSObject {
             locationUpdate: locationUpdateSubject.asObservable(),
             authorizationStatus: authorizationStatusSubject.asObservable(),
             locationError: locationErrorSubject.asObservable(),
-            initialLocation: initialLocation
+            initialLocation: initialLocation,
+            restaurants: restaurantsSubject.asObservable()
         )
     }
     
-    // MARK: - Location Methods
     func checkDeviceLocationSetting() {
         DispatchQueue.global().async { [weak self] in
             guard let self = self else { return }
@@ -96,6 +107,35 @@ final class FoodMapViewModel: NSObject {
             
         @unknown default:
             locationErrorSubject.onNext(.unknown)
+        }
+    }
+    
+    // MARK: - Restaurant Methods
+    private func loadRestaurants() {
+        repository.fetchAllReviews()
+            .subscribe(onNext: { [weak self] reviews in
+                // 리뷰에서 Restaurant 중복 제거
+                let restaurants = reviews.compactMap { $0.restaurant }
+                let uniqueRestaurants = self?.removeDuplicateRestaurants(restaurants) ?? []
+               
+                self?.restaurantsSubject.onNext(uniqueRestaurants)
+            }, onError: { [weak self] error in
+                print("식당 데이터 로드 실패: \(error)")
+                self?.restaurantsSubject.onNext([])
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func removeDuplicateRestaurants(_ restaurants: [Restaurant]) -> [Restaurant] {
+        var seen = Set<String>()
+        return restaurants.filter { restaurant in
+            let key = "\(restaurant.latitude),\(restaurant.longitude)"
+            if seen.contains(key) {
+                return false
+            } else {
+                seen.insert(key)
+                return true
+            }
         }
     }
 }
