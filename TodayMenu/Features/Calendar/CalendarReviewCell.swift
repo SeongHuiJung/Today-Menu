@@ -20,10 +20,25 @@ final class CalendarReviewCell: FSCalendarCell {
         return imageView
     }()
     
+    private let badgeView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.point
+        view.isHidden = true
+        return view
+    }()
+    
+    private let badgeLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 8, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        return label
+    }()
+    
     private let foodNameLabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .medium)
-        label.textColor = UIColor(named: "point")
+        label.font = .systemFont(ofSize: 11, weight: .medium)
+        label.textColor = UIColor.point
         label.textAlignment = .center
         label.numberOfLines = 1
         return label
@@ -39,10 +54,12 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private let backgroundColorView = {
         let view = UIView()
-        view.backgroundColor = UIColor(named: "point")?.withAlphaComponent(0.15)
+        view.backgroundColor = UIColor.point.withAlphaComponent(0.15)
         view.layer.cornerRadius = 12
         return view
     }()
+    
+    private var badgeWidthConstraint: Constraint?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -55,9 +72,10 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private func setupUI() {
         contentView.insertSubview(backgroundColorView, at: 0)
-        [dateLabel, foodImageView, foodNameLabel].forEach {
+        [dateLabel, foodImageView, foodNameLabel, badgeView].forEach {
             contentView.addSubview($0)
         }
+        badgeView.addSubview(badgeLabel)
         
         backgroundColorView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(2)
@@ -66,6 +84,19 @@ final class CalendarReviewCell: FSCalendarCell {
         dateLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(6)
             $0.horizontalEdges.equalToSuperview().inset(4)
+        }
+        
+        badgeView.snp.makeConstraints {
+            $0.top.equalTo(foodImageView.snp.top).offset(-4)
+            $0.trailing.equalTo(foodImageView.snp.trailing).offset(4)
+            badgeWidthConstraint = $0.width.greaterThanOrEqualTo(18).constraint
+            $0.height.equalTo(14)
+        }
+        
+        badgeLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().offset(4)
+            $0.trailing.equalToSuperview().offset(-4)
         }
         
         foodImageView.snp.makeConstraints {
@@ -86,19 +117,44 @@ final class CalendarReviewCell: FSCalendarCell {
         foodImageView.image = nil
         foodNameLabel.text = nil
         dateLabel.text = nil
+        badgeView.isHidden = true
+        badgeLabel.text = nil
     }
     
-    func configure(date: Int, foodName: String, photoPath: String?) {
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        badgeView.layer.cornerRadius = badgeView.frame.height / 2
+    }
+    
+    func configure(date: Int, foodName: String, photoPath: String?, additionalReviewCount: Int) {
         dateLabel.text = "\(date)"
         foodNameLabel.text = foodName
         
         if let photoPath = photoPath, !photoPath.isEmpty {
             // TODO: 실제 이미지 로드 구현
             foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
-            foodImageView.tintColor = UIColor(named: "point")
+            foodImageView.tintColor = UIColor.lightPoint
         } else {
             foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
-            foodImageView.tintColor = UIColor(named: "point")
+            foodImageView.tintColor = UIColor.lightPoint
+        }
+        
+        // 뱃지 처리
+        if additionalReviewCount > 0 {
+            let displayCount = additionalReviewCount > 99 ? "99+" : "+\(additionalReviewCount)"
+            badgeLabel.text = displayCount
+            badgeView.isHidden = false
+            
+            // 글자 수에 따라 너비 조정
+            if additionalReviewCount > 99 {
+                badgeWidthConstraint?.update(offset: 26)
+            } else if additionalReviewCount >= 10 {
+                badgeWidthConstraint?.update(offset: 22)
+            } else {
+                badgeWidthConstraint?.update(offset: 18)
+            }
+        } else {
+            badgeView.isHidden = true
         }
         
         backgroundColorView.isHidden = false

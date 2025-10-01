@@ -25,23 +25,19 @@ class CalendarViewController: BaseViewController {
         calendar.headerHeight = 60
         calendar.weekdayHeight = 40
         
-        // 헤더 스타일
         calendar.appearance.headerTitleColor = .black
         calendar.appearance.headerTitleFont = .systemFont(ofSize: 18, weight: .bold)
         calendar.appearance.headerDateFormat = "yyyy년 M월"
         calendar.appearance.headerMinimumDissolvedAlpha = 0.0
         
-        // 요일 스타일
         calendar.appearance.weekdayTextColor = .darkGray
         calendar.appearance.weekdayFont = .systemFont(ofSize: 14, weight: .medium)
         
-        // 날짜 숨기기 (커스텀 셀에서 표시)
         calendar.appearance.titleDefaultColor = .clear
         calendar.appearance.titleWeekendColor = .clear
         calendar.appearance.titleTodayColor = .clear
         calendar.appearance.titleSelectionColor = .clear
         
-        // 선택/오늘 배경 제거
         calendar.appearance.todayColor = .clear
         calendar.appearance.selectionColor = .clear
         calendar.appearance.borderRadius = 0
@@ -49,7 +45,6 @@ class CalendarViewController: BaseViewController {
         return calendar
     }()
     
-    // 날짜별 리뷰 데이터 저장
     private var reviewsByDate: [String: [Review]] = [:]
 
     override func viewDidLoad() {
@@ -140,8 +135,9 @@ extension CalendarViewController: FSCalendarDataSource {
             let firstReview = reviews.first!
             let foodName = firstReview.food.first?.name ?? "음식"
             let photoPath = firstReview.photos.first
+            let additionalCount = reviews.count - 1
             
-            cell.configure(date: day, foodName: foodName, photoPath: photoPath)
+            cell.configure(date: day, foodName: foodName, photoPath: photoPath, additionalReviewCount: additionalCount)
             
             return cell
         } else {
@@ -159,6 +155,7 @@ extension CalendarViewController: FSCalendarDataSource {
 }
 
 // MARK: - FSCalendarDelegate
+
 extension CalendarViewController: FSCalendarDelegate {
     
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
