@@ -54,8 +54,15 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private let backgroundColorView = {
         let view = UIView()
-        view.backgroundColor = UIColor.point.withAlphaComponent(0.15)
+        view.backgroundColor = UIColor.pointBackground
+        view.layer.borderColor = UIColor.borderPoint.cgColor
+        view.layer.borderWidth = 1
         view.layer.cornerRadius = 12
+        
+        view.layer.shadowColor = UIColor.red.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 4
+        view.layer.shadowOpacity = 0.2
         return view
     }()
     
@@ -71,8 +78,7 @@ final class CalendarReviewCell: FSCalendarCell {
     }
     
     private func setupUI() {
-        contentView.insertSubview(backgroundColorView, at: 0)
-        [dateLabel, foodImageView, foodNameLabel, badgeView].forEach {
+        [backgroundColorView, dateLabel, foodImageView, foodNameLabel, badgeView].forEach {
             contentView.addSubview($0)
         }
         badgeView.addSubview(badgeLabel)
@@ -121,11 +127,6 @@ final class CalendarReviewCell: FSCalendarCell {
         badgeLabel.text = nil
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        badgeView.layer.cornerRadius = badgeView.frame.height / 2
-    }
-    
     func configure(date: Int, foodName: String, photoPath: String?, additionalReviewCount: Int) {
         dateLabel.text = "\(date)"
         foodNameLabel.text = foodName
@@ -156,6 +157,10 @@ final class CalendarReviewCell: FSCalendarCell {
         } else {
             badgeView.isHidden = true
         }
+        
+        // cornerRadius 적용
+        badgeView.layoutIfNeeded()
+        badgeView.layer.cornerRadius = badgeView.frame.height / 2
         
         backgroundColorView.isHidden = false
         foodImageView.isHidden = false

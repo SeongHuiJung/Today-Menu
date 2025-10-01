@@ -19,6 +19,17 @@ final class CalendarEmptyCell: FSCalendarCell {
         return label
     }()
     
+    private let backgroundColorView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 12
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 4
+        view.layer.shadowOpacity = 0.08
+        return view
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -29,7 +40,13 @@ final class CalendarEmptyCell: FSCalendarCell {
     }
     
     private func setupUI() {
-        contentView.addSubview(dateLabel)
+        [backgroundColorView, dateLabel].forEach {
+            contentView.addSubview($0)
+        }
+        
+        backgroundColorView.snp.makeConstraints {
+            $0.edges.equalToSuperview().inset(2)
+        }
         
         dateLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(6)

@@ -17,7 +17,7 @@ class CalendarViewController: BaseViewController {
     
     private let calendar: FSCalendar = {
         let calendar = FSCalendar()
-        calendar.backgroundColor = .white
+        calendar.backgroundColor = .clear
         calendar.locale = Locale(identifier: "ko_KR")
         calendar.scrollDirection = .horizontal
         calendar.scope = .month
@@ -26,12 +26,12 @@ class CalendarViewController: BaseViewController {
         calendar.weekdayHeight = 40
         
         calendar.appearance.headerTitleColor = .black
-        calendar.appearance.headerTitleFont = .systemFont(ofSize: 18, weight: .bold)
+        calendar.appearance.headerTitleFont = .systemFont(ofSize: FontSize.subTitle, weight: .bold)
         calendar.appearance.headerDateFormat = "yyyy년 M월"
         calendar.appearance.headerMinimumDissolvedAlpha = 0.0
         
         calendar.appearance.weekdayTextColor = .darkGray
-        calendar.appearance.weekdayFont = .systemFont(ofSize: 14, weight: .medium)
+        calendar.appearance.weekdayFont = .systemFont(ofSize: FontSize.small, weight: .bold)
         
         calendar.appearance.titleDefaultColor = .clear
         calendar.appearance.titleWeekendColor = .clear
@@ -69,14 +69,14 @@ class CalendarViewController: BaseViewController {
         
         calendar.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
-            $0.leading.trailing.equalToSuperview()
+            $0.horizontalEdges.equalToSuperview().inset(20)
             $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
     
     override func configureView() {
         super.configureView()
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundGray
         title = "음식 History"
     }
     
