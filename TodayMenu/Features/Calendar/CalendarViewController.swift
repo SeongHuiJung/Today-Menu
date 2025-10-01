@@ -78,7 +78,7 @@ class CalendarViewController: BaseViewController {
         return label
     }()
     
-    private let weekScrollView: UICollectionView = {
+    private let weekColleciontView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 0
@@ -100,7 +100,7 @@ class CalendarViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCalendar()
-        setupWeekScrollView()
+        setupCollectionView()
         loadReviews()
     }
     
@@ -111,12 +111,9 @@ class CalendarViewController: BaseViewController {
     
     override func configureHierarchy() {
         super.configureHierarchy()
-        
-        view.addSubview(calendarContainerView)
-        calendarContainerView.addSubview(calendar)
-        view.addSubview(weekContainerView)
-        weekContainerView.addSubview(dateStackView)
-        weekContainerView.addSubview(weekScrollView)
+        [calendarContainerView, weekContainerView].forEach { view.addSubview($0) }
+        [calendar].forEach { calendarContainerView.addSubview($0) }
+        [dateStackView, weekColleciontView].forEach { weekContainerView.addSubview($0) }
         
         [yearLabel, monthLabel].forEach {
             dateStackView.addArrangedSubview($0)
@@ -148,7 +145,7 @@ class CalendarViewController: BaseViewController {
             $0.width.equalTo(60)
         }
         
-        weekScrollView.snp.makeConstraints {
+        weekColleciontView.snp.makeConstraints {
             $0.leading.equalTo(dateStackView.snp.trailing)
             $0.trailing.equalToSuperview()
             $0.top.bottom.equalToSuperview()
@@ -169,10 +166,10 @@ class CalendarViewController: BaseViewController {
         calendar.register(CalendarEmptyCell.self, forCellReuseIdentifier: "emptyCell")
     }
     
-    private func setupWeekScrollView() {
-        weekScrollView.dataSource = self
-        weekScrollView.delegate = self
-        weekScrollView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.identifier)
+    private func setupCollectionView() {
+        weekColleciontView.dataSource = self
+        weekColleciontView.delegate = self
+        weekColleciontView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.identifier)
     }
     
     private func loadReviews() {
@@ -216,14 +213,11 @@ class CalendarViewController: BaseViewController {
         var dates: [Date] = []
         
         let today = Date()
+        let twoDaysLater = calendar.date(byAdding: .day, value: 2, to: today) ?? today
         let startDate = oldestReviewDate ?? calendar.date(byAdding: .month, value: -3, to: today) ?? today
         
-        guard let startOfWeek = calendar.dateInterval(of: .weekOfMonth, for: date)?.start else {
-            return []
-        }
-        
         var currentDate = startDate
-        while currentDate <= today {
+        while currentDate <= twoDaysLater {
             dates.append(currentDate)
             guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
             currentDate = nextDate
@@ -233,10 +227,10 @@ class CalendarViewController: BaseViewController {
     }
     
     private func updateDateLabels() {
-        let visibleRect = CGRect(origin: weekScrollView.contentOffset, size: weekScrollView.bounds.size)
+        let visibleRect = CGRect(origin: weekColleciontView.contentOffset, size: weekColleciontView.bounds.size)
         let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
         
-        if let indexPath = weekScrollView.indexPathForItem(at: visiblePoint),
+        if let indexPath = weekColleciontView.indexPathForItem(at: visiblePoint),
            indexPath.item < weekDates.count {
             let visibleDate = weekDates[indexPath.item]
             let month = Calendar.current.component(.month, from: visibleDate)
@@ -268,13 +262,13 @@ class CalendarViewController: BaseViewController {
             self.weekContainerView.alpha = 1
             self.view.layoutIfNeeded()
         } completion: { _ in
-            self.weekScrollView.reloadData()
+            self.weekColleciontView.reloadData()
             
             if let selectedIndex = self.weekDates.firstIndex(where: {
                 Calendar.current.isDate($0, inSameDayAs: selectedDate)
             }) {
                 let indexPath = IndexPath(item: selectedIndex, section: 0)
-                self.weekScrollView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
+                self.weekColleciontView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
             }
         }
     }
@@ -365,7 +359,10 @@ extension CalendarViewController: UICollectionViewDataSource {
         let weekday = Calendar.current.component(.weekday, from: date)
         let isWeekend = weekday == 1 || weekday == 7
         
-        cell.configure(date: date, isWeekend: isWeekend)
+        let today = Date()
+        let isFuture = date > today
+        
+        cell.configure(date: date, isWeekend: isWeekend, isFuture: isFuture)
         
         return cell
     }
@@ -374,6 +371,12 @@ extension CalendarViewController: UICollectionViewDataSource {
 // MARK: - UICollectionViewDelegate
 
 extension CalendarViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        let date = weekDates[indexPath.item]
+        let today = Date()
+        return date <= today
+    }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let date = weekDates[indexPath.item]

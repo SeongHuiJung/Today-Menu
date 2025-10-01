@@ -18,6 +18,14 @@ final class WeekDayCell: UICollectionViewCell {
         return label
     }()
     
+    private let monthLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 10, weight: .medium)
+        label.textColor = .systemGray
+        label.textAlignment = .center
+        return label
+    }()
+    
     private let dateLabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .semibold)
@@ -32,6 +40,9 @@ final class WeekDayCell: UICollectionViewCell {
         view.layer.cornerRadius = 12
         return view
     }()
+    
+    private var isWeekendDay = false
+    private var isFutureDay = false
     
     override var isSelected: Bool {
         didSet {
@@ -48,9 +59,22 @@ final class WeekDayCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        dayLabel.textColor = .darkGray
+        dateLabel.textColor = .black
+        monthLabel.textColor = .systemGray
+        monthLabel.alpha = 0
+        monthLabel.text = nil
+        containerView.backgroundColor = .white
+        isWeekendDay = false
+        isFutureDay = false
+    }
+    
     private func setupUI() {
         contentView.addSubview(containerView)
-        [dayLabel, dateLabel].forEach {
+        [dayLabel, monthLabel, dateLabel].forEach {
             containerView.addSubview($0)
         }
         
@@ -63,14 +87,23 @@ final class WeekDayCell: UICollectionViewCell {
             $0.centerX.equalToSuperview()
         }
         
+        monthLabel.snp.makeConstraints {
+            $0.top.equalTo(dayLabel.snp.bottom).offset(2)
+            $0.centerX.equalToSuperview()
+            $0.height.equalTo(12)
+        }
+        
         dateLabel.snp.makeConstraints {
-            $0.top.equalTo(dayLabel.snp.bottom).offset(4)
+            $0.top.equalTo(monthLabel.snp.bottom).offset(2)
             $0.centerX.equalToSuperview()
             $0.bottom.equalToSuperview().offset(-8)
         }
     }
     
-    func configure(date: Date, isWeekend: Bool) {
+    func configure(date: Date, isWeekend: Bool, isFuture: Bool) {
+        self.isWeekendDay = isWeekend
+        self.isFutureDay = isFuture
+        
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ko_KR")
         dateFormatter.dateFormat = "E"
@@ -79,10 +112,16 @@ final class WeekDayCell: UICollectionViewCell {
         let day = Calendar.current.component(.day, from: date)
         dateLabel.text = "\(day)"
         
-        if isWeekend && !isSelected {
-            dayLabel.textColor = .systemRed
-            dateLabel.textColor = .systemRed
+        let month = Calendar.current.component(.month, from: date)
+        if day == 1 {
+            monthLabel.text = "\(month)월"
+            monthLabel.alpha = 1
+        } else {
+            monthLabel.text = ""
+            monthLabel.alpha = 0
         }
+        
+        updateSelection()
     }
     
     private func updateSelection() {
@@ -90,10 +129,23 @@ final class WeekDayCell: UICollectionViewCell {
             containerView.backgroundColor = UIColor(named: "point")
             dayLabel.textColor = .white
             dateLabel.textColor = .white
+            monthLabel.textColor = .white
         } else {
             containerView.backgroundColor = .white
-            dayLabel.textColor = .darkGray
-            dateLabel.textColor = .black
+            
+            if isFutureDay {
+                dayLabel.textColor = .systemGray3
+                dateLabel.textColor = .systemGray3
+                monthLabel.textColor = .systemGray4
+            } else if isWeekendDay {
+                dayLabel.textColor = .systemRed
+                dateLabel.textColor = .systemRed
+                monthLabel.textColor = .systemRed
+            } else {
+                dayLabel.textColor = .darkGray
+                dateLabel.textColor = .black
+                monthLabel.textColor = .systemGray
+            }
         }
     }
 }
