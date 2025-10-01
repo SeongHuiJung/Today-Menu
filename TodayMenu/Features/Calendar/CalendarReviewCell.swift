@@ -20,9 +20,24 @@ final class CalendarReviewCell: FSCalendarCell {
         return imageView
     }()
     
+    private let badgeView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(red: 0.95, green: 0.26, blue: 0.21, alpha: 1.0)
+        view.isHidden = true
+        return view
+    }()
+    
+    private let badgeLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 8, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        return label
+    }()
+    
     private let foodNameLabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .medium)
+        label.font = .systemFont(ofSize: 11, weight: .medium)
         label.textColor = UIColor(named: "point")
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -44,6 +59,8 @@ final class CalendarReviewCell: FSCalendarCell {
         return view
     }()
     
+    private var badgeWidthConstraint: Constraint?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -55,9 +72,10 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private func setupUI() {
         contentView.insertSubview(backgroundColorView, at: 0)
-        [dateLabel, foodImageView, foodNameLabel].forEach {
+        [dateLabel, badgeView, foodImageView, foodNameLabel].forEach {
             contentView.addSubview($0)
         }
+        badgeView.addSubview(badgeLabel)
         
         backgroundColorView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(2)
@@ -65,13 +83,26 @@ final class CalendarReviewCell: FSCalendarCell {
         
         dateLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(6)
-            $0.horizontalEdges.equalToSuperview().inset(4)
+            $0.leading.trailing.equalToSuperview().inset(4)
+        }
+        
+        badgeView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(dateLabel.snp.bottom).offset(2)
+            badgeWidthConstraint = $0.width.greaterThanOrEqualTo(14).constraint
+            $0.height.equalTo(14)
+        }
+        
+        badgeLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().offset(4)
+            $0.trailing.equalToSuperview().offset(-4)
         }
         
         foodImageView.snp.makeConstraints {
-            $0.horizontalEdges.equalToSuperview().inset(12)
-            $0.height.equalTo(foodImageView.snp.width)
-            $0.top.equalTo(dateLabel.snp.bottom).offset(4)
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(badgeView.snp.bottom).offset(2)
+            $0.width.height.equalTo(32)
         }
         
         foodNameLabel.snp.makeConstraints {
@@ -86,9 +117,16 @@ final class CalendarReviewCell: FSCalendarCell {
         foodImageView.image = nil
         foodNameLabel.text = nil
         dateLabel.text = nil
+        badgeView.isHidden = true
+        badgeLabel.text = nil
     }
     
-    func configure(date: Int, foodName: String, photoPath: String?) {
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        badgeView.layer.cornerRadius = badgeView.frame.height / 2
+    }
+    
+    func configure(date: Int, foodName: String, photoPath: String?, additionalReviewCount: Int) {
         dateLabel.text = "\(date)"
         foodNameLabel.text = foodName
         
@@ -99,6 +137,34 @@ final class CalendarReviewCell: FSCalendarCell {
         } else {
             foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
             foodImageView.tintColor = UIColor(named: "point")
+        }
+        
+        if additionalReviewCount > 0 {
+            let displayCount = additionalReviewCount > 99 ? "99+" : "+\(additionalReviewCount)"
+            badgeLabel.text = displayCount
+            badgeView.isHidden = false
+            
+            if additionalReviewCount > 99 {
+                badgeWidthConstraint?.update(offset: 22)
+            } else if additionalReviewCount >= 10 {
+                badgeWidthConstraint?.update(offset: 18)
+            } else {
+                badgeWidthConstraint?.update(offset: 14)
+            }
+            
+            foodImageView.snp.remakeConstraints {
+                $0.centerX.equalToSuperview()
+                $0.top.equalTo(badgeView.snp.bottom).offset(2)
+                $0.width.height.equalTo(32)
+            }
+        } else {
+            badgeView.isHidden = true
+            
+            foodImageView.snp.remakeConstraints {
+                $0.centerX.equalToSuperview()
+                $0.top.equalTo(dateLabel.snp.bottom).offset(4)
+                $0.width.height.equalTo(32)
+            }
         }
         
         backgroundColorView.isHidden = false
