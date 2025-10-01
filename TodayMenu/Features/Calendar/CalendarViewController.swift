@@ -15,6 +15,8 @@ class CalendarViewController: BaseViewController {
     private let disposeBag = DisposeBag()
     private let repository = ReviewRepository()
     
+    private let calendarContainerView = UIView()
+    
     private let calendar: FSCalendar = {
         let calendar = FSCalendar()
         calendar.backgroundColor = .clear
@@ -46,6 +48,7 @@ class CalendarViewController: BaseViewController {
     }()
     
     private var reviewsByDate: [String: [Review]] = [:]
+    private var isCalendarHidden = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,16 +64,21 @@ class CalendarViewController: BaseViewController {
     override func configureHierarchy() {
         super.configureHierarchy()
         
-        view.addSubview(calendar)
+        view.addSubview(calendarContainerView)
+        calendarContainerView.addSubview(calendar)
     }
     
     override func configureLayout() {
         super.configureLayout()
         
-        calendar.snp.makeConstraints {
+        calendarContainerView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.horizontalEdges.equalToSuperview().inset(20)
             $0.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        calendar.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
     }
     
@@ -119,6 +127,36 @@ class CalendarViewController: BaseViewController {
         let dateKey = dateFormatter.string(from: date)
         return reviewsByDate[dateKey] ?? []
     }
+    
+    private func hideCalendar() {
+        guard !isCalendarHidden else { return }
+        isCalendarHidden = true
+        
+        calendarContainerView.snp.remakeConstraints {
+            $0.bottom.equalTo(view.snp.top)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.height.equalTo(calendarContainerView.frame.height)
+        }
+        
+        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    private func showCalendar() {
+        guard isCalendarHidden else { return }
+        isCalendarHidden = false
+        
+        calendarContainerView.snp.remakeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+            self.view.layoutIfNeeded()
+        }
+    }
 }
 
 // MARK: - FSCalendarDataSource
@@ -163,7 +201,7 @@ extension CalendarViewController: FSCalendarDelegate {
         
         if !reviews.isEmpty {
             print("선택된 날짜: \(date), 리뷰 개수: \(reviews.count)")
-            // TODO: 상세 화면으로 이동
+            hideCalendar()
         }
     }
     
