@@ -47,12 +47,60 @@ class CalendarViewController: BaseViewController {
         return calendar
     }()
     
+    private let weekContainerView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.alpha = 0
+        return view
+    }()
+    
+    private let dateStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 2
+        stackView.alignment = .center
+        return stackView
+    }()
+    
+    private let yearLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .darkGray
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let monthLabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.textColor = .black
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let weekScrollView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        layout.itemSize = CGSize(width: 60, height: 80)
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.showsHorizontalScrollIndicator = false
+        return collectionView
+    }()
+    
     private var reviewsByDate: [String: [Review]] = [:]
     private var isCalendarHidden = false
+    private var selectedDate: Date?
+    private var weekDates: [Date] = []
+    private var oldestReviewDate: Date?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCalendar()
+        setupWeekScrollView()
         loadReviews()
     }
     
@@ -66,6 +114,13 @@ class CalendarViewController: BaseViewController {
         
         view.addSubview(calendarContainerView)
         calendarContainerView.addSubview(calendar)
+        view.addSubview(weekContainerView)
+        weekContainerView.addSubview(dateStackView)
+        weekContainerView.addSubview(weekScrollView)
+        
+        [yearLabel, monthLabel].forEach {
+            dateStackView.addArrangedSubview($0)
+        }
     }
     
     override func configureLayout() {
@@ -79,6 +134,24 @@ class CalendarViewController: BaseViewController {
         
         calendar.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+        
+        weekContainerView.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(80)
+        }
+        
+        dateStackView.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(16)
+            $0.centerY.equalToSuperview()
+            $0.width.equalTo(60)
+        }
+        
+        weekScrollView.snp.makeConstraints {
+            $0.leading.equalTo(dateStackView.snp.trailing)
+            $0.trailing.equalToSuperview()
+            $0.top.bottom.equalToSuperview()
         }
     }
     
@@ -96,12 +169,22 @@ class CalendarViewController: BaseViewController {
         calendar.register(CalendarEmptyCell.self, forCellReuseIdentifier: "emptyCell")
     }
     
+    private func setupWeekScrollView() {
+        weekScrollView.dataSource = self
+        weekScrollView.delegate = self
+        weekScrollView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.identifier)
+    }
+    
     private func loadReviews() {
         repository.fetchAllReviews()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] reviews in
                 self?.organizeReviewsByDate(reviews)
                 self?.calendar.reloadData()
+                
+                if let oldest = reviews.map({ $0.ateAt }).min() {
+                    self?.oldestReviewDate = oldest
+                }
             })
             .disposed(by: disposeBag)
     }
@@ -128,9 +211,52 @@ class CalendarViewController: BaseViewController {
         return reviewsByDate[dateKey] ?? []
     }
     
-    private func hideCalendar() {
+    private func generateWeekDates(around date: Date) -> [Date] {
+        let calendar = Calendar.current
+        var dates: [Date] = []
+        
+        let today = Date()
+        let startDate = oldestReviewDate ?? calendar.date(byAdding: .month, value: -3, to: today) ?? today
+        
+        guard let startOfWeek = calendar.dateInterval(of: .weekOfMonth, for: date)?.start else {
+            return []
+        }
+        
+        var currentDate = startDate
+        while currentDate <= today {
+            dates.append(currentDate)
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = nextDate
+        }
+        
+        return dates
+    }
+    
+    private func updateDateLabels() {
+        let visibleRect = CGRect(origin: weekScrollView.contentOffset, size: weekScrollView.bounds.size)
+        let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
+        
+        if let indexPath = weekScrollView.indexPathForItem(at: visiblePoint),
+           indexPath.item < weekDates.count {
+            let visibleDate = weekDates[indexPath.item]
+            let month = Calendar.current.component(.month, from: visibleDate)
+            let year = Calendar.current.component(.year, from: visibleDate)
+            
+            yearLabel.text = "\(year)년"
+            monthLabel.text = "\(month)월"
+        }
+    }
+    
+    private func hideCalendar(selectedDate: Date) {
         guard !isCalendarHidden else { return }
         isCalendarHidden = true
+        self.selectedDate = selectedDate
+        self.weekDates = generateWeekDates(around: selectedDate)
+        
+        let month = Calendar.current.component(.month, from: selectedDate)
+        let year = Calendar.current.component(.year, from: selectedDate)
+        yearLabel.text = "\(year)년"
+        monthLabel.text = "\(month)월"
         
         calendarContainerView.snp.remakeConstraints {
             $0.bottom.equalTo(view.snp.top)
@@ -138,8 +264,18 @@ class CalendarViewController: BaseViewController {
             $0.height.equalTo(calendarContainerView.frame.height)
         }
         
-        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+            self.weekContainerView.alpha = 1
             self.view.layoutIfNeeded()
+        } completion: { _ in
+            self.weekScrollView.reloadData()
+            
+            if let selectedIndex = self.weekDates.firstIndex(where: {
+                Calendar.current.isDate($0, inSameDayAs: selectedDate)
+            }) {
+                let indexPath = IndexPath(item: selectedIndex, section: 0)
+                self.weekScrollView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
+            }
         }
     }
     
@@ -154,6 +290,7 @@ class CalendarViewController: BaseViewController {
         }
         
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+            self.weekContainerView.alpha = 0
             self.view.layoutIfNeeded()
         }
     }
@@ -201,7 +338,7 @@ extension CalendarViewController: FSCalendarDelegate {
         
         if !reviews.isEmpty {
             print("선택된 날짜: \(date), 리뷰 개수: \(reviews.count)")
-            hideCalendar()
+            hideCalendar(selectedDate: date)
         }
     }
     
@@ -210,5 +347,41 @@ extension CalendarViewController: FSCalendarDelegate {
             $0.height.equalTo(bounds.height)
         }
         view.layoutIfNeeded()
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+
+extension CalendarViewController: UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return weekDates.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WeekDayCell.identifier, for: indexPath) as! WeekDayCell
+        
+        let date = weekDates[indexPath.item]
+        let weekday = Calendar.current.component(.weekday, from: date)
+        let isWeekend = weekday == 1 || weekday == 7
+        
+        cell.configure(date: date, isWeekend: isWeekend)
+        
+        return cell
+    }
+}
+
+// MARK: - UICollectionViewDelegate
+
+extension CalendarViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let date = weekDates[indexPath.item]
+        selectedDate = date
+        print("주간 뷰에서 선택된 날짜: \(date)")
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        updateDateLabels()
     }
 }
