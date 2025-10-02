@@ -193,30 +193,50 @@ extension FoodMapViewController {
             cuisine: restaurant.cuisine
         )
     }
+    
+    private func getZoomLevel(for mapView: MKMapView) -> Double {
+        let region = mapView.region
+        let span = region.span.longitudeDelta
+        let zoomLevel = log2(360 / span)
+        return zoomLevel
+    }
 }
 
 // MARK: - MKMapViewDelegate
-
 extension FoodMapViewController: MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        guard annotation is RestaurantAnnotation else {
+        guard let restaurantAnnotation = annotation as? RestaurantAnnotation else {
             return nil
         }
         
         let identifier = "RestaurantAnnotation"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? RestaurantAnnotationView
         
         if annotationView == nil {
-            annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-            annotationView?.canShowCallout = false
+            annotationView = RestaurantAnnotationView(annotation: annotation, reuseIdentifier: identifier)
         } else {
             annotationView?.annotation = annotation
         }
         
-        annotationView?.image = UIImage(named: "annotation-food")
+        annotationView?.configure(with: restaurantAnnotation)
+        
+        // 현재 줌 레벨에 따라 라벨 표시
+        let zoomLevel = getZoomLevel(for: mapView)
+        annotationView?.updateLabelVisibility(zoomLevel: zoomLevel)
         
         return annotationView
+    }
+    
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        let zoomLevel = getZoomLevel(for: mapView)
+        
+        // 모든 annotation view의 라벨 가시성 업데이트
+        for annotation in mapView.annotations {
+            if let view = mapView.view(for: annotation) as? RestaurantAnnotationView {
+                view.updateLabelVisibility(zoomLevel: zoomLevel)
+            }
+        }
     }
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
@@ -233,7 +253,6 @@ extension FoodMapViewController: MKMapViewDelegate {
 }
 
 // MARK: - RestaurantAnnotation
-
 class RestaurantAnnotation: NSObject, MKAnnotation {
     let coordinate: CLLocationCoordinate2D
     let title: String?
