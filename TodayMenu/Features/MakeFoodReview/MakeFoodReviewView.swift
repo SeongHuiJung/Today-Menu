@@ -51,6 +51,15 @@ final class MakeFoodReviewView: BaseView {
         picker.preferredDatePickerStyle = .wheels
         picker.locale = Locale(identifier: "ko_KR")
         picker.isHidden = true
+        
+        // 최대 날짜를 오늘 23:59:59로 설정
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        let today = Date()
+        if let endOfToday = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: today) {
+            picker.maximumDate = endOfToday
+        }
+        
         return picker
     }()
     
