@@ -342,9 +342,22 @@ extension MakeFoodReviewView {
     func toggleDatePicker() {
         datePicker.isHidden.toggle()
         
-        // 애니메이션으로 datePicker 표시/숨김
+        // datePicker on/off에 따라 optionalInfoLabel 위치 조정
+        if datePicker.isHidden {
+            optionalInfoLabel.snp.remakeConstraints {
+                $0.top.equalTo(datePickerContainer.snp.bottom).offset(32)
+                $0.leading.equalToSuperview().offset(20)
+            }
+        } else {
+            optionalInfoLabel.snp.remakeConstraints {
+                $0.top.equalTo(datePicker.snp.bottom).offset(32)
+                $0.leading.equalToSuperview().offset(20)
+            }
+        }
+
         UIView.animate(withDuration: 0.3) {
             self.datePicker.alpha = self.datePicker.isHidden ? 0 : 1
+            self.layoutIfNeeded()
         }
     }
     
