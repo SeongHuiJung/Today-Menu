@@ -13,7 +13,7 @@ final class CalendarEmptyCell: FSCalendarCell {
     
     private let dateLabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .regular)
+        label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = .black
         label.textAlignment = .center
         return label
@@ -59,8 +59,16 @@ final class CalendarEmptyCell: FSCalendarCell {
         dateLabel.text = nil
     }
     
-    func configure(date: Int, isWeekend: Bool) {
+    func configure(date: Int, isWeekend: Bool, isFuture: Bool = false) {
         dateLabel.text = "\(date)"
-        dateLabel.textColor = isWeekend ? .systemRed : .black
+        
+        if isFuture {
+            // 미래 날짜는 회색 처리
+            dateLabel.textColor = .lightGray
+            backgroundColorView.backgroundColor = UIColor.systemGray6
+        } else {
+            dateLabel.textColor = isWeekend ? .systemRed : .black
+            backgroundColorView.backgroundColor = .white
+        }
     }
 }

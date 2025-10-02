@@ -46,7 +46,7 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private let dateLabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .bold)
+        label.font = .systemFont(ofSize: 13, weight: .bold)
         label.textColor = .black
         label.textAlignment = .center
         return label

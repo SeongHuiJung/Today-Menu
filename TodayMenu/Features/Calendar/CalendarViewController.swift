@@ -354,8 +354,24 @@ private extension CalendarViewController {
 // MARK: - FSCalendarDataSource
 extension CalendarViewController: FSCalendarDataSource {
     
+    func maximumDate(for calendar: FSCalendar) -> Date {
+        // 최대 날짜는 오늘
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        let today = Date()
+        let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: today) ?? today
+        return endOfToday
+    }
+    
     func calendar(_ calendar: FSCalendar, cellFor date: Date, at position: FSCalendarMonthPosition) -> FSCalendarCell {
         let reviews = getReviews(for: date)
+        
+        // 미래 날짜 체크
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        let today = cal.startOfDay(for: Date())
+        let cellDate = cal.startOfDay(for: date)
+        let isFuture = cellDate > today
         
         if !reviews.isEmpty {
             let cell = calendar.dequeueReusableCell(withIdentifier: "reviewCell", for: date, at: position) as! CalendarReviewCell
@@ -376,7 +392,7 @@ extension CalendarViewController: FSCalendarDataSource {
             let weekday = Calendar.current.component(.weekday, from: date)
             let isWeekend = weekday == 1 || weekday == 7
             
-            cell.configure(date: day, isWeekend: isWeekend)
+            cell.configure(date: day, isWeekend: isWeekend, isFuture: isFuture)
             
             return cell
         }
@@ -395,6 +411,15 @@ extension CalendarViewController: FSCalendarDelegate {
             $0.height.equalTo(bounds.height)
         }
         view.layoutIfNeeded()
+    }
+    
+    func calendar(_ calendar: FSCalendar, shouldSelect date: Date, at monthPosition: FSCalendarMonthPosition) -> Bool {
+        // 미래 날짜 선택 불가
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        let today = cal.startOfDay(for: Date())
+        let selectedDate = cal.startOfDay(for: date)
+        return selectedDate <= today
     }
 }
 
