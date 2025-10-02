@@ -212,10 +212,7 @@ final class ReviewForOneRestaurantTableViewCell: BaseTableViewCell {
         
         if let firstCompanion = review.companion.first,
            let companionType = CompanionType(rawValue: firstCompanion.type) {
-            var companionText = companionType.displayName
-            if let name = firstCompanion.name, !name.isEmpty {
-                companionText += "와 함께"
-            }
+            let companionText = companionType.displayName
             companionLabel.text = companionText
             companionContainerView.isHidden = false
         } else {
