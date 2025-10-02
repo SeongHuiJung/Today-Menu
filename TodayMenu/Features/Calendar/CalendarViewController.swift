@@ -9,12 +9,26 @@ import UIKit
 import FSCalendar
 import SnapKit
 import RxSwift
+import RxCocoa
 
-class CalendarViewController: BaseViewController {
+final class CalendarViewController: BaseViewController {
     
+    // MARK: - Properties
     private let disposeBag = DisposeBag()
-    private let repository = ReviewRepository()
+    private let viewModel: CalendarViewModel
     
+    private let viewWillAppearSubject = PublishSubject<Void>()
+    private let dateSelectedSubject = PublishSubject<Date>()
+    private let weekDateSelectedSubject = PublishSubject<Date>()
+    private let reviewSelectedSubject = PublishSubject<Review>()
+    private let calendarBackTappedSubject = PublishSubject<Void>()
+    
+    private var reviewsByDate: [String: [Review]] = [:]
+    private var currentReviews: [Review] = []
+    private var weekDates: [Date] = []
+    private var isCalendarHidden = false
+    
+    // MARK: - UI Components
     private let calendarContainerView = UIView()
     
     private let calendar: FSCalendar = {
@@ -47,14 +61,14 @@ class CalendarViewController: BaseViewController {
         return calendar
     }()
     
-    private let weekContainerView = {
+    private let weekContainerView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
         view.alpha = 0
         return view
     }()
     
-    private let dateStackView = {
+    private let dateStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.spacing = 2
@@ -62,7 +76,7 @@ class CalendarViewController: BaseViewController {
         return stackView
     }()
     
-    private let yearLabel = {
+    private let yearLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = .darkGray
@@ -70,7 +84,7 @@ class CalendarViewController: BaseViewController {
         return label
     }()
     
-    private let monthLabel = {
+    private let monthLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textColor = .black
@@ -78,7 +92,7 @@ class CalendarViewController: BaseViewController {
         return label
     }()
     
-    private let weekScrollView: UICollectionView = {
+    private lazy var weekScrollView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 0
@@ -91,7 +105,7 @@ class CalendarViewController: BaseViewController {
         return collectionView
     }()
     
-    private let reviewTableView = {
+    private let reviewTableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .backgroundGray
         tableView.separatorStyle = .none
@@ -99,26 +113,31 @@ class CalendarViewController: BaseViewController {
         return tableView
     }()
     
-    private var reviewsByDate: [String: [Review]] = [:]
-    private var isCalendarHidden = false
-    private var selectedDate: Date?
-    private var weekDates: [Date] = []
-    private var oldestReviewDate: Date?
-    private var currentReviews: [Review] = []
-
+    // MARK: - Init
+    init(viewModel: CalendarViewModel = CalendarViewModel()) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCalendar()
         setupWeekScrollView()
         setupReviewTableView()
-        loadReviews()
+        bindViewModel()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        loadReviews()
+        viewWillAppearSubject.onNext(())
     }
     
+    // MARK: - Configuration
     override func configureHierarchy() {
         super.configureHierarchy()
         
@@ -177,8 +196,12 @@ class CalendarViewController: BaseViewController {
         view.backgroundColor = .backgroundGray
         title = "음식 History"
     }
+}
+
+// MARK: - Setup
+private extension CalendarViewController {
     
-    private func setupCalendar() {
+    func setupCalendar() {
         calendar.dataSource = self
         calendar.delegate = self
         
@@ -186,112 +209,101 @@ class CalendarViewController: BaseViewController {
         calendar.register(CalendarEmptyCell.self, forCellReuseIdentifier: "emptyCell")
     }
     
-    private func setupWeekScrollView() {
+    func setupWeekScrollView() {
         weekScrollView.dataSource = self
         weekScrollView.delegate = self
         weekScrollView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.identifier)
     }
     
-    private func setupReviewTableView() {
+    func setupReviewTableView() {
         reviewTableView.dataSource = self
         reviewTableView.delegate = self
         reviewTableView.register(CalendarReviewListCell.self, forCellReuseIdentifier: CalendarReviewListCell.identifier)
     }
+}
+
+// MARK: - Binding
+private extension CalendarViewController {
     
-    private func loadReviews() {
-        repository.fetchAllReviews()
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] reviews in
-                self?.organizeReviewsByDate(reviews)
+    func bindViewModel() {
+        let input = CalendarViewModel.Input(
+            viewWillAppear: viewWillAppearSubject.asObservable(),
+            dateSelected: dateSelectedSubject.asObservable(),
+            weekDateSelected: weekDateSelectedSubject.asObservable(),
+            reviewSelected: reviewSelectedSubject.asObservable(),
+            calendarBackTapped: calendarBackTappedSubject.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 리뷰 데이터 바인딩
+        output.reviewsByDate
+            .drive(onNext: { [weak self] reviewsByDate in
+                self?.reviewsByDate = reviewsByDate
                 self?.calendar.reloadData()
-                
-                if let oldest = reviews.map({ $0.ateAt }).min() {
-                    self?.oldestReviewDate = oldest
-                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 현재 리뷰 리스트 바인딩
+        output.currentReviews
+            .drive(onNext: { [weak self] reviews in
+                self?.currentReviews = reviews
+                self?.reviewTableView.reloadData()
+            })
+            .disposed(by: disposeBag)
+        
+        // 주간 날짜 바인딩
+        output.weekDates
+            .drive(onNext: { [weak self] dates in
+                self?.weekDates = dates
+                self?.weekScrollView.reloadData()
+            })
+            .disposed(by: disposeBag)
+        
+        // 캘린더 숨김
+        output.shouldHideCalendar
+            .drive(onNext: { [weak self] date in
+                self?.hideCalendar(selectedDate: date)
+            })
+            .disposed(by: disposeBag)
+        
+        // 캘린더 보이기
+        output.shouldShowCalendar
+            .drive(onNext: { [weak self] in
+                self?.showCalendar()
+            })
+            .disposed(by: disposeBag)
+        
+        // 날짜 라벨 업데이트
+        output.dateLabels
+            .drive(onNext: { [weak self] labels in
+                self?.yearLabel.text = labels.year
+                self?.monthLabel.text = labels.month
+            })
+            .disposed(by: disposeBag)
+        
+        // 리뷰 상세보기
+        output.reviewDetailTrigger
+            .drive(onNext: { [weak self] review in
+                self?.navigateToReviewDetail(review)
             })
             .disposed(by: disposeBag)
     }
+}
+
+// MARK: - Helper Methods
+private extension CalendarViewController {
     
-    private func organizeReviewsByDate(_ reviews: [Review]) {
-        reviewsByDate.removeAll()
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        for review in reviews {
-            let dateKey = dateFormatter.string(from: review.ateAt)
-            if reviewsByDate[dateKey] == nil {
-                reviewsByDate[dateKey] = []
-            }
-            reviewsByDate[dateKey]?.append(review)
-        }
-    }
-    
-    private func getReviews(for date: Date) -> [Review] {
+    func getReviews(for date: Date) -> [Review] {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateKey = dateFormatter.string(from: date)
         return reviewsByDate[dateKey] ?? []
     }
     
-    private func updateReviewList(for date: Date) {
-        currentReviews = getReviews(for: date).sorted { $0.ateAt < $1.ateAt }
-        reviewTableView.reloadData()
-    }
-    
-    private func generateWeekDates(around date: Date) -> [Date] {
-        var calendar = Calendar.current
-        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
-        var dates: [Date] = []
-        
-        let now = Date()
-        let today = calendar.startOfDay(for: now)
-        
-        // 오늘 기준으로 미래 2일 (내일, 모레)
-        guard let twoDaysLater = calendar.date(byAdding: .day, value: 2, to: today) else {
-            return []
-        }
-        
-        let startDate = oldestReviewDate ?? calendar.date(byAdding: .month, value: -3, to: today) ?? today
-        
-        var currentDate = calendar.startOfDay(for: startDate)
-        
-        while currentDate <= twoDaysLater {
-            dates.append(currentDate)
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
-            currentDate = nextDate
-        }
-        
-        return dates
-    }
-    
-    private func updateDateLabels() {
-        let visibleRect = CGRect(origin: weekScrollView.contentOffset, size: weekScrollView.bounds.size)
-        let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
-        
-        if let indexPath = weekScrollView.indexPathForItem(at: visiblePoint),
-           indexPath.item < weekDates.count {
-            let visibleDate = weekDates[indexPath.item]
-            let month = Calendar.current.component(.month, from: visibleDate)
-            let year = Calendar.current.component(.year, from: visibleDate)
-            
-            yearLabel.text = "\(year)년"
-            monthLabel.text = "\(month)월"
-        }
-    }
-    
-    private func hideCalendar(selectedDate: Date) {
+    func hideCalendar(selectedDate: Date) {
         guard !isCalendarHidden else { return }
         isCalendarHidden = true
-        self.selectedDate = selectedDate
-        self.weekDates = generateWeekDates(around: selectedDate)
-        
-        let month = Calendar.current.component(.month, from: selectedDate)
-        let year = Calendar.current.component(.year, from: selectedDate)
-        yearLabel.text = "\(year)년"
-        monthLabel.text = "\(month)월"
-        
-        updateReviewList(for: selectedDate)
         
         calendarContainerView.snp.remakeConstraints {
             $0.bottom.equalTo(view.snp.top)
@@ -303,7 +315,8 @@ class CalendarViewController: BaseViewController {
             self.weekContainerView.alpha = 1
             self.reviewTableView.alpha = 1
             self.view.layoutIfNeeded()
-        } completion: { _ in
+        } completion: { [weak self] _ in
+            guard let self = self else { return }
             self.weekScrollView.reloadData()
             
             if let selectedIndex = self.weekDates.firstIndex(where: {
@@ -315,7 +328,7 @@ class CalendarViewController: BaseViewController {
         }
     }
     
-    private func showCalendar() {
+    func showCalendar() {
         guard isCalendarHidden else { return }
         isCalendarHidden = false
         
@@ -330,6 +343,11 @@ class CalendarViewController: BaseViewController {
             self.reviewTableView.alpha = 0
             self.view.layoutIfNeeded()
         }
+    }
+    
+    func navigateToReviewDetail(_ review: Review) {
+        print("선택된 리뷰: \(review.food.first?.name ?? "")")
+        // TODO: 리뷰 상세 화면으로 이동
     }
 }
 
@@ -369,12 +387,7 @@ extension CalendarViewController: FSCalendarDataSource {
 extension CalendarViewController: FSCalendarDelegate {
     
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
-        let reviews = getReviews(for: date)
-        
-        if !reviews.isEmpty {
-            print("선택된 날짜: \(date), 리뷰 개수: \(reviews.count)")
-            hideCalendar(selectedDate: date)
-        }
+        dateSelectedSubject.onNext(date)
     }
     
     func calendar(_ calendar: FSCalendar, boundingRectWillChange bounds: CGRect, animated: Bool) {
@@ -429,15 +442,7 @@ extension CalendarViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let date = weekDates[indexPath.item]
-        selectedDate = date
-        updateReviewList(for: date)
-        print("주간 뷰에서 선택된 날짜: \(date)")
-    }
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if scrollView == weekScrollView {
-            updateDateLabels()
-        }
+        weekDateSelectedSubject.onNext(date)
     }
 }
 
@@ -463,7 +468,6 @@ extension CalendarViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectItemAt indexPath: IndexPath) {
         let review = currentReviews[indexPath.row]
-        print("선택된 리뷰: \(review.food.first?.name ?? "")")
-        // TODO: 리뷰 상세 화면으로 이동
+        reviewSelectedSubject.onNext(review)
     }
 }
