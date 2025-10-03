@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import RealmSwift
 
 final class MakeFoodReviewViewModel {
     
@@ -27,8 +28,8 @@ final class MakeFoodReviewViewModel {
         let companionText: Observable<String>
         let datePickerValueChanged: Observable<Date>
         let selectedRestaurant: Observable<RestaurantData?>
-        let selectedPhotos: Observable<[UIImage]> // 사진 추가
-        let photoRemoveTap: Observable<Int> // 사진 삭제
+        let selectedPhotos: Observable<[UIImage]>
+        let photoRemoveTap: Observable<Int>
     }
     
     struct Output {
@@ -45,8 +46,8 @@ final class MakeFoodReviewViewModel {
         let showSaveSuccess: Signal<String>
         let showError: Signal<String>
         let popView: Signal<Void>
-        let selectedPhotos: Driver<[UIImage]> // 선택된 사진 목록
-        let photoCount: Driver<String> // 사진 개수 (N/5)
+        let selectedPhotos: Driver<[UIImage]>
+        let photoCount: Driver<String>
     }
     
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
@@ -63,48 +64,39 @@ final class MakeFoodReviewViewModel {
         self.selectedFood = selectedFood
         self.menuSelectedTime = menuSelectedTime
         
-        // 초기 먹은 시간 설정
         let initialEatTime = calculateInitialEatTime()
         self.eatTimeRelay.accept(initialEatTime)
     }
     
     func transform(_ input: Input) -> Output {
-        // 먹은 시간 처리
         input.datePickerValueChanged
             .bind(to: eatTimeRelay)
             .disposed(by: disposeBag)
         
-        // 코멘트 처리
         input.commentText
             .bind(to: commentRelay)
             .disposed(by: disposeBag)
         
-        // 동행인 이름 처리
         input.companionText
             .bind(to: companionNameRelay)
             .disposed(by: disposeBag)
         
-        // 음식 이름 처리
         input.foodNameText
             .bind(to: foodNameRelay)
             .disposed(by: disposeBag)
         
-        // 식당 이름 처리
         input.storeNameText
             .bind(to: storeNameRelay)
             .disposed(by: disposeBag)
         
-        // 선택된 식당 정보 처리
         input.selectedRestaurant
             .bind(to: selectedRestaurantRelay)
             .disposed(by: disposeBag)
         
-        // 사진 처리
         input.selectedPhotos
             .bind(to: selectedPhotosRelay)
             .disposed(by: disposeBag)
         
-        // 사진 삭제 처리
         input.photoRemoveTap
             .withLatestFrom(selectedPhotosRelay) { index, photos in
                 var newPhotos = photos
@@ -116,7 +108,6 @@ final class MakeFoodReviewViewModel {
             .bind(to: selectedPhotosRelay)
             .disposed(by: disposeBag)
         
-        // 사진 개수
         let photoCount = selectedPhotosRelay
             .map { "\($0.count)/5" }
             .asDriver(onErrorJustReturn: "0/5")
@@ -127,7 +118,6 @@ final class MakeFoodReviewViewModel {
             }
             .asDriver(onErrorJustReturn: "")
         
-        // 별점 핸들링
         let starRating = Observable.merge(
             input.starTaps.enumerated().map { index, tap in
                 tap.map { index + 1 }
@@ -147,7 +137,6 @@ final class MakeFoodReviewViewModel {
             }
             .asDriver(onErrorJustReturn: "별점을 선택해주세요")
         
-        // 동행인 태그 핸들링
         let tagSelection = Observable.merge(
             input.tagTaps.enumerated().map { index, tap in
                 tap.map { index }
@@ -187,7 +176,6 @@ final class MakeFoodReviewViewModel {
                 ) ?? ValidationResult(isValid: false, errorMessage: "입력을 확인해주세요")
             }
         
-        // Save review
         let saveResult = input.saveTap
             .withLatestFrom(validationResult)
             .flatMap { [weak self] validation -> Observable<Result<String, Error>> in
@@ -230,25 +218,22 @@ final class MakeFoodReviewViewModel {
                 }
             }
         
-        // Dismiss after successful save
         let popAfterSave = saveSuccess.map { _ in () }
         let popView = popAfterSave
         
         // 사진 추가 버튼 탭 시, 최대 5장 체크
         let showImagePicker = input.photoUploadTap
             .withLatestFrom(selectedPhotosRelay)
-            .filter { $0.count < 5 } // 5장 미만일 때만 피커 표시
+            .filter { $0.count < 5 }
             .map { _ in () }
             .asSignal(onErrorSignalWith: .empty())
         
-        // 5장 초과 시 에러 메시지
         let photoLimitError = input.photoUploadTap
             .withLatestFrom(selectedPhotosRelay)
             .filter { $0.count >= 5 }
             .map { _ in "사진은 최대 5장까지 추가할 수 있습니다." }
             .asSignal(onErrorSignalWith: .empty())
         
-        // 에러 메시지 통합
         let allErrors = Signal.merge(saveError.asSignal(onErrorSignalWith: .empty()), photoLimitError)
         
         return Output(
@@ -274,11 +259,8 @@ final class MakeFoodReviewViewModel {
 // MARK: - Logic
 extension MakeFoodReviewViewModel {
     private func calculateInitialEatTime() -> Date {
-        // 메뉴 선택 시간 + 1시간
         let oneHourLater = menuSelectedTime.addingTimeInterval(3600)
         let now = Date()
-        
-        // 1시간 후가 현재 시간보다 미래라면 현재 시간 사용
         return oneHourLater > now ? now : oneHourLater
     }
     
@@ -312,8 +294,6 @@ extension MakeFoodReviewViewModel {
             
             // Restaurant 객체 생성
             let restaurant: Restaurant?
-            
-            // 선택된 식당 정보가 있으면 사용
             if let selectedRestaurant = self.selectedRestaurantRelay.value {
                 let latitude = Double(selectedRestaurant.latitude) ?? 0.0
                 let longitude = Double(selectedRestaurant.longitude) ?? 0.0
@@ -350,27 +330,43 @@ extension MakeFoodReviewViewModel {
                 }
             }
             
-            // Review 객체 생성
+            // Review 객체 생성 (사진 없이)
             let review = Review(
                 food: [food],
                 restaurant: restaurant,
                 rating: Double(self.starRatingRelay.value),
                 comment: self.commentRelay.value.isEmpty ? nil : self.commentRelay.value,
                 companion: companions,
-                photos: [], // TODO: 사진 기능 추가 시 구현
+                photos: [],
                 ateAt: self.eatTimeRelay.value
             )
             
-            // Realm에 저장
+            // Realm에 먼저 저장하여 Review ID 획득
             self.repository.saveReview(review)
                 .subscribe(onNext: { result in
                     switch result {
                     case .success:
-                        observer.onNext(.success("리뷰가 저장되었습니다!"))
+                        // Review ID를 사용하여 사진 저장
+                        let reviewId = review.id.stringValue
+                        let selectedImages = self.selectedPhotosRelay.value
+                        let photoFileNames = ImageStorageManager.shared.saveReviewImages(selectedImages, reviewId: reviewId)
+                        
+                        // 사진 파일명을 Review에 업데이트
+                        do {
+                            let realm = try Realm()
+                            try realm.write {
+                                review.photos.append(objectsIn: photoFileNames)
+                            }
+                            observer.onNext(.success("리뷰가 저장되었습니다!"))
+                        } catch {
+                            observer.onNext(.failure(ReviewError.saveFailed("사진 저장 중 오류가 발생했습니다")))
+                        }
+                        observer.onCompleted()
+                        
                     case .failure(let error):
                         observer.onNext(.failure(error))
+                        observer.onCompleted()
                     }
-                    observer.onCompleted()
                 })
                 .disposed(by: self.disposeBag)
             

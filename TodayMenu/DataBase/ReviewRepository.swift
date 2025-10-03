@@ -92,6 +92,11 @@ final class ReviewRepository {
     // MARK: - Delete
     func deleteReview(_ review: Review) -> Observable<Result<Void, Error>> {
         return Observable.create { observer in
+            // 기기에 저장된 사진 먼저 삭제
+            let photoFileNames = Array(review.photos)
+            ImageStorageManager.shared.deleteReviewImages(fileNames: photoFileNames)
+            
+            // Realm 에서 사진 이름 삭제
             do {
                 try self.realm.write {
                     self.realm.delete(review)
