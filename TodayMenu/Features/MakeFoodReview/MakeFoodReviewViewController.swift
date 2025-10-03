@@ -8,6 +8,8 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import PhotosUI
+import AVFoundation
 
 final class MakeFoodReviewViewController: BaseViewController {
     
@@ -19,6 +21,9 @@ final class MakeFoodReviewViewController: BaseViewController {
     // 선택된 식당 정보
     private var selectedRestaurant: RestaurantData?
     private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
+    
+    // 선택된 사진들
+    private let selectedImagesRelay = BehaviorRelay<[UIImage]>(value: [])
     
     private let saveButton = {
         let button = UIButton()
@@ -108,11 +113,8 @@ extension MakeFoodReviewViewController {
         let starTaps = mainView.starButtons.map { $0.rx.tap.asObservable() }
         let tagTaps = mainView.tagButtons.map { $0.rx.tap.asObservable() }
         
-        let photoUploadTapGesture = UITapGestureRecognizer()
-        mainView.photoUploadView.addGestureRecognizer(photoUploadTapGesture)
-        let photoUploadTap = photoUploadTapGesture.rx.event
-            .map { _ in () }
-            .asObservable()
+        // 사진 삭제 이벤트
+        let photoRemoveSubject = PublishSubject<Int>()
         
         mainView.datePickerButton.rx.tap
             .subscribe(with: self) { owner, _ in
@@ -123,17 +125,45 @@ extension MakeFoodReviewViewController {
         let input = MakeFoodReviewViewModel.Input(
             starTaps: starTaps,
             tagTaps: tagTaps,
-            photoUploadTap: photoUploadTap,
+            photoUploadTap: mainView.photoCaptureButton.rx.tap.asObservable(),
             saveTap: saveButton.rx.tap.asObservable(),
             foodNameText: mainView.foodNameTextField.rx.text.orEmpty.asObservable(),
-            storeNameText: Observable.just(""), // 검색 버튼으로 대체
+            storeNameText: Observable.just(""),
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
             companionText: mainView.companionTextField.rx.text.orEmpty.asObservable(),
             datePickerValueChanged: mainView.datePicker.rx.value.asObservable(),
-            selectedRestaurant: selectedRestaurantRelay.asObservable()
+            selectedRestaurant: selectedRestaurantRelay.asObservable(),
+            selectedPhotos: selectedImagesRelay.asObservable(),
+            photoRemoveTap: photoRemoveSubject.asObservable()
         )
         
         let output = viewModel.transform(input)
+        
+        // 선택된 사진 CollectionView 바인딩
+        output.selectedPhotos
+            .drive(mainView.selectedPhotosCollectionView.rx.items(
+                cellIdentifier: PhotoCollectionViewCell.identifier,
+                cellType: PhotoCollectionViewCell.self
+            )) { index, image, cell in
+                cell.configure(with: image)
+                cell.onRemove = {
+                    photoRemoveSubject.onNext(index)
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        // 사진 개수 업데이트
+        output.photoCount
+            .drive(onNext: { [weak self] count in
+                let components = count.split(separator: "/")
+                if let current = components.first, let max = components.last {
+                    self?.mainView.photoCaptureButton.updateCount(
+                        current: Int(current) ?? 0,
+                        max: Int(max) ?? 5
+                    )
+                }
+            })
+            .disposed(by: disposeBag)
         
         output.initialData
             .drive(with: self) { owner, food in
@@ -193,6 +223,7 @@ extension MakeFoodReviewViewController {
             .drive()
             .disposed(by: disposeBag)
         
+        // 사진 추가 버튼 탭 시, 최대 개수 체크 후 이미지 피커 표시
         output.showImagePicker
             .emit(with: self) { owner, _ in
                 owner.presentImagePicker()
@@ -224,22 +255,25 @@ extension MakeFoodReviewViewController {
 // MARK: - Image Picker
 extension MakeFoodReviewViewController {
     private func presentImagePicker() {
-        let alert = UIAlertController(title: "사진 선택", message: "사진을 선택하는 방법을 선택해주세요", preferredStyle: .actionSheet)
+        let currentCount = selectedImagesRelay.value.count
         
-        alert.addAction(UIAlertAction(title: "카메라", style: .default) { _ in
-            // TODO: Present camera
-            print("카메라 기능")
-        })
+        // 커스텀 갤러리 표시
+        let galleryVC = CustomPhotoGalleryViewController(existingPhotoCount: currentCount)
+        galleryVC.modalPresentationStyle = .fullScreen
         
-        alert.addAction(UIAlertAction(title: "갤러리", style: .default) { _ in
-            // TODO: Present photo library
-            print("갤러리 기능")
-        })
+        galleryVC.onPhotosSelected = { [weak self] images in
+            guard let self = self else { return }
+            var currentImages = self.selectedImagesRelay.value
+            
+            for image in images {
+                if currentImages.count < 5 {
+                    currentImages.append(image)
+                }
+            }
+            
+            self.selectedImagesRelay.accept(currentImages)
+        }
         
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        
-        present(alert, animated: true)
+        present(galleryVC, animated: true)
     }
 }
-
-

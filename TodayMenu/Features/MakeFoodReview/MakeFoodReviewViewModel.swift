@@ -5,7 +5,7 @@
 //  Created by 정성희 on 9/25/25.
 //
 
-import Foundation
+import UIKit
 import RxSwift
 import RxCocoa
 
@@ -27,6 +27,8 @@ final class MakeFoodReviewViewModel {
         let companionText: Observable<String>
         let datePickerValueChanged: Observable<Date>
         let selectedRestaurant: Observable<RestaurantData?>
+        let selectedPhotos: Observable<[UIImage]> // 사진 추가
+        let photoRemoveTap: Observable<Int> // 사진 삭제
     }
     
     struct Output {
@@ -43,6 +45,8 @@ final class MakeFoodReviewViewModel {
         let showSaveSuccess: Signal<String>
         let showError: Signal<String>
         let popView: Signal<Void>
+        let selectedPhotos: Driver<[UIImage]> // 선택된 사진 목록
+        let photoCount: Driver<String> // 사진 개수 (N/5)
     }
     
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
@@ -53,6 +57,7 @@ final class MakeFoodReviewViewModel {
     private let foodNameRelay = BehaviorRelay<String>(value: "")
     private let storeNameRelay = BehaviorRelay<String>(value: "")
     private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
+    private let selectedPhotosRelay = BehaviorRelay<[UIImage]>(value: [])
     
     init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
@@ -93,6 +98,28 @@ final class MakeFoodReviewViewModel {
         input.selectedRestaurant
             .bind(to: selectedRestaurantRelay)
             .disposed(by: disposeBag)
+        
+        // 사진 처리
+        input.selectedPhotos
+            .bind(to: selectedPhotosRelay)
+            .disposed(by: disposeBag)
+        
+        // 사진 삭제 처리
+        input.photoRemoveTap
+            .withLatestFrom(selectedPhotosRelay) { index, photos in
+                var newPhotos = photos
+                if index < newPhotos.count {
+                    newPhotos.remove(at: index)
+                }
+                return newPhotos
+            }
+            .bind(to: selectedPhotosRelay)
+            .disposed(by: disposeBag)
+        
+        // 사진 개수
+        let photoCount = selectedPhotosRelay
+            .map { "\($0.count)/5" }
+            .asDriver(onErrorJustReturn: "0/5")
         
         let eatTimeDisplay = eatTimeRelay
             .map { date in
@@ -207,6 +234,23 @@ final class MakeFoodReviewViewModel {
         let popAfterSave = saveSuccess.map { _ in () }
         let popView = popAfterSave
         
+        // 사진 추가 버튼 탭 시, 최대 5장 체크
+        let showImagePicker = input.photoUploadTap
+            .withLatestFrom(selectedPhotosRelay)
+            .filter { $0.count < 5 } // 5장 미만일 때만 피커 표시
+            .map { _ in () }
+            .asSignal(onErrorSignalWith: .empty())
+        
+        // 5장 초과 시 에러 메시지
+        let photoLimitError = input.photoUploadTap
+            .withLatestFrom(selectedPhotosRelay)
+            .filter { $0.count >= 5 }
+            .map { _ in "사진은 최대 5장까지 추가할 수 있습니다." }
+            .asSignal(onErrorSignalWith: .empty())
+        
+        // 에러 메시지 통합
+        let allErrors = Signal.merge(saveError.asSignal(onErrorSignalWith: .empty()), photoLimitError)
+        
         return Output(
             initialData: Driver.just(selectedFood),
             initialEatTime: Driver.just(eatTimeRelay.value),
@@ -217,10 +261,12 @@ final class MakeFoodReviewViewModel {
             showCompanionTextField: showCompanionTextField,
             companionTextFieldClear: companionTextFieldClear,
             validationResult: validationResult.asDriver(onErrorJustReturn: ValidationResult(isValid: false)),
-            showImagePicker: input.photoUploadTap.asSignal(onErrorSignalWith: .empty()),
+            showImagePicker: showImagePicker,
             showSaveSuccess: saveSuccess.asSignal(onErrorSignalWith: .empty()),
-            showError: saveError.asSignal(onErrorSignalWith: .empty()),
-            popView: popView.asSignal(onErrorSignalWith: .empty())
+            showError: allErrors,
+            popView: popView.asSignal(onErrorSignalWith: .empty()),
+            selectedPhotos: selectedPhotosRelay.asDriver(),
+            photoCount: photoCount
         )
     }
 }

@@ -134,3 +134,56 @@ class TagButton: UIButton {
         configuration = config
     }
 }
+
+final class PhotoCaptureButton: UIButton {
+    
+    private let cameraIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "camera.fill")
+        iv.tintColor = .darkGray
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+    
+    private let countLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .darkGray
+        label.textAlignment = .center
+        return label
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = .white
+        layer.cornerRadius = 12
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.lightGray.cgColor
+        
+        addSubview(cameraIconView)
+        addSubview(countLabel)
+        
+        cameraIconView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().offset(-8)
+            $0.width.height.equalTo(32)
+        }
+        
+        countLabel.snp.makeConstraints {
+            $0.top.equalTo(cameraIconView.snp.bottom).offset(4)
+            $0.centerX.equalToSuperview()
+        }
+    }
+    
+    func updateCount(current: Int, max: Int) {
+        countLabel.text = "\(current)/\(max)"
+    }
+}

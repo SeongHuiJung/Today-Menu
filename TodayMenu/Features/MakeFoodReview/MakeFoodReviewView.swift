@@ -139,6 +139,25 @@ final class MakeFoodReviewView: BaseView {
     
     // 사진 첨부
     let photoSectionLabel = BasicLabel(text: "사진 첨부", alignment: .left, size: FontSize.subTitle, weight: .semibold)
+    
+    // 사진 촬영 버튼
+    let photoCaptureButton = PhotoCaptureButton()
+    
+    // 선택된 사진 CollectionView
+    lazy var selectedPhotosCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.itemSize = CGSize(width: 80, height: 80)
+        layout.minimumInteritemSpacing = 8
+        layout.minimumLineSpacing = 8
+        
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.showsHorizontalScrollIndicator = false
+        cv.register(PhotoCollectionViewCell.self, forCellWithReuseIdentifier: PhotoCollectionViewCell.identifier)
+        return cv
+    }()
+    
     let photoUploadView = {
         let view = UIView()
         view.backgroundColor = .white
@@ -171,12 +190,11 @@ final class MakeFoodReviewView: BaseView {
         [requiredInfoLabel, foodNameLabel, foodNameTextField, ratingLabel, starStackView, ratingPromptLabel,
          eatTimeLabel, datePickerContainer, datePicker, optionalInfoLabel, storeNameLabel, restaurantSearchButton,
          selectedRestaurantView, commentLabel, commentTextView, taggedPeopleLabel,
-         tagStackView, companionTextField, photoSectionLabel, photoUploadView].forEach {
+         tagStackView, companionTextField, photoSectionLabel, photoCaptureButton, selectedPhotosCollectionView].forEach {
             contentView.addSubview($0)
         }
         
         [datePickerButton].forEach { datePickerContainer.addSubview($0) }
-        [cameraImageView, photoPromptLabel, photoSubLabel].forEach { photoUploadView.addSubview($0) }
         [selectedRestaurantNameLabel, selectedRestaurantAddressLabel, removeRestaurantButton].forEach {
             selectedRestaurantView.addSubview($0)
         }
@@ -318,27 +336,18 @@ final class MakeFoodReviewView: BaseView {
             $0.leading.equalToSuperview().offset(20)
         }
         
-        photoUploadView.snp.makeConstraints {
+        photoCaptureButton.snp.makeConstraints {
             $0.top.equalTo(photoSectionLabel.snp.bottom).offset(16)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(120)
+            $0.leading.equalToSuperview().offset(20)
+            $0.width.height.equalTo(80)
+        }
+        
+        selectedPhotosCollectionView.snp.makeConstraints {
+            $0.leading.equalTo(photoCaptureButton.snp.trailing).offset(12)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.centerY.equalTo(photoCaptureButton)
+            $0.height.equalTo(80)
             $0.bottom.equalToSuperview().offset(-40)
-        }
-        
-        cameraImageView.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.centerY.equalToSuperview().offset(-15)
-            $0.width.height.equalTo(40)
-        }
-        
-        photoPromptLabel.snp.makeConstraints {
-            $0.top.equalTo(cameraImageView.snp.bottom).offset(8)
-            $0.centerX.equalToSuperview()
-        }
-        
-        photoSubLabel.snp.makeConstraints {
-            $0.top.equalTo(photoPromptLabel.snp.bottom).offset(4)
-            $0.centerX.equalToSuperview()
         }
     }
 }
