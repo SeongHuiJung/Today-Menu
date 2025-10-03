@@ -38,9 +38,11 @@ final class MakeFoodReviewView: BaseView {
     let starStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.distribution = .fillEqually
-        stackView.spacing = 8
-        stackView.alignment = .leading
+        stackView.distribution = .fill
+        stackView.spacing = 15
+        stackView.alignment = .center
+        stackView.setContentHuggingPriority(.required, for: .horizontal)
+        stackView.setContentCompressionResistancePriority(.required, for: .horizontal)
         return stackView
     }()
     var starButtons: [UIButton] = []
@@ -235,7 +237,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 음식 이름
         foodNameLabel.snp.makeConstraints {
-            $0.top.equalTo(photoCaptureButton.snp.bottom).offset(32)
             $0.top.equalTo(photoCaptureButton.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -248,7 +249,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 별점
         ratingLabel.snp.makeConstraints {
-            $0.top.equalTo(foodNameTextField.snp.bottom).offset(32)
             $0.top.equalTo(foodNameTextField.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -261,7 +261,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 먹은 시간
         eatTimeLabel.snp.makeConstraints {
-            $0.top.equalTo(starStackView.snp.bottom).offset(32)
             $0.top.equalTo(starStackView.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -286,7 +285,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 식당 정보
         storeNameLabel.snp.makeConstraints {
-            $0.top.equalTo(datePickerButton.snp.bottom).offset(32)
             $0.top.equalTo(datePickerButton.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -330,7 +328,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 코멘트
         commentLabel.snp.makeConstraints {
-            $0.top.equalTo(selectedRestaurantView.snp.bottom).offset(32)
             $0.top.equalTo(selectedRestaurantView.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -343,7 +340,6 @@ final class MakeFoodReviewView: BaseView {
         
         // 함께 먹은 사람
         taggedPeopleLabel.snp.makeConstraints {
-            $0.top.equalTo(commentTextView.snp.bottom).offset(32)
             $0.top.equalTo(commentTextView.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
@@ -369,7 +365,6 @@ final class MakeFoodReviewView: BaseView {
         saveButton.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
-            $0.height.equalTo(56)
             $0.height.equalTo(44)
         }
     }
@@ -415,6 +410,10 @@ extension MakeFoodReviewView {
             let button = StarButton(tag: i + 1)
             starButtons.append(button)
             starStackView.addArrangedSubview(button)
+           
+            button.snp.makeConstraints { make in
+                make.width.height.equalTo(32)
+            }
         }
     }
     
