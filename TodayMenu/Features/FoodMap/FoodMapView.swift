@@ -58,7 +58,7 @@ final class FoodMapView: BaseView {
     
     override func configureLayout() {
         mapView.snp.makeConstraints { make in
-            make.edges.equalTo(safeAreaLayoutGuide)
+            make.edges.equalToSuperview()  // safeArea 무시하고 전체 화면에 표시
         }
         
         locationButton.snp.makeConstraints { make in

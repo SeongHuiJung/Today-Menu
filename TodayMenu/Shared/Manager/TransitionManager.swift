@@ -19,6 +19,8 @@ class TransitionManager {
         tabBarAppearance.backgroundColor = .customBackground
         tabBarAppearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
         tabBarAppearance.stackedLayoutAppearance.normal.iconColor = .customGray
+        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.customGray]
+        tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
         
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
@@ -36,12 +38,15 @@ class TransitionManager {
         if let items = tabBarController.tabBar.items {
             items[0].selectedImage = UIImage(systemName: SFsymbol.starBubbleFill.rawValue)
             items[0].image = UIImage(systemName: SFsymbol.starBubbleFill.rawValue)
+            items[0].title = "추천"
             
             items[1].selectedImage = UIImage(systemName: SFsymbol.mapFill.rawValue)
             items[1].image = UIImage(systemName: SFsymbol.mapFill.rawValue)
+            items[1].title = "지도"
             
             items[2].selectedImage = UIImage(systemName: SFsymbol.calendar.rawValue)
             items[2].image = UIImage(systemName: SFsymbol.calendar.rawValue)
+            items[2].title = "달력"
         }
         
         return tabBarController

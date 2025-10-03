@@ -135,6 +135,12 @@ final class CalendarViewController: BaseViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewWillAppearSubject.onNext(())
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     // MARK: - Configuration
@@ -194,7 +200,6 @@ final class CalendarViewController: BaseViewController {
     override func configureView() {
         super.configureView()
         view.backgroundColor = .backgroundGray
-        title = "음식 History"
     }
 }
 
@@ -204,7 +209,6 @@ private extension CalendarViewController {
     func setupCalendar() {
         calendar.dataSource = self
         calendar.delegate = self
-        
         calendar.register(CalendarReviewCell.self, forCellReuseIdentifier: "reviewCell")
         calendar.register(CalendarEmptyCell.self, forCellReuseIdentifier: "emptyCell")
     }

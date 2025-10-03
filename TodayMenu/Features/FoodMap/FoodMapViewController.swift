@@ -27,19 +27,19 @@ final class FoodMapViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupNavigationBar()
         setupMapView()
         bind()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         viewWillAppearSubject.accept(())
     }
     
-    private func setupNavigationBar() {
-        navigationController?.navigationBar.prefersLargeTitles = false
-        title = "지도"
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     private func setupMapView() {
