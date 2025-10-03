@@ -121,6 +121,7 @@ final class CalendarReviewCell: FSCalendarCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         foodImageView.image = nil
+        foodImageView.layer.cornerRadius = 16
         foodNameLabel.text = nil
         dateLabel.text = nil
         badgeView.isHidden = true
@@ -131,13 +132,28 @@ final class CalendarReviewCell: FSCalendarCell {
         dateLabel.text = "\(date)"
         foodNameLabel.text = foodName
         
-        if let photoPath = photoPath, !photoPath.isEmpty {
-            // TODO: 실제 이미지 로드 구현
-            foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
-            foodImageView.tintColor = UIColor.lightPoint
+        // 사진이 있으면 CalendarPicture 폴더에서 로드
+        if let photoFileName = photoPath, !photoFileName.isEmpty {
+            if let image = ImageStorageManager.shared.loadImage(fileName: photoFileName, type: .calendar) {
+                foodImageView.image = image
+                foodImageView.contentMode = .scaleAspectFill
+                foodImageView.layer.cornerRadius = 5
+                foodImageView.snp.remakeConstraints {
+                    $0.horizontalEdges.equalToSuperview().inset(8)
+                    $0.height.equalTo(foodImageView.snp.width)
+                    $0.top.equalTo(dateLabel.snp.bottom)
+                }
+            } else {
+                // 이미지 로드 실패 시 기본 아이콘
+                foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
+                foodImageView.tintColor = UIColor.lightPoint
+                foodImageView.contentMode = .scaleAspectFit
+            }
         } else {
+            // 사진이 없으면 기본 아이콘
             foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
             foodImageView.tintColor = UIColor.lightPoint
+            foodImageView.contentMode = .scaleAspectFit
         }
         
         // 뱃지 처리

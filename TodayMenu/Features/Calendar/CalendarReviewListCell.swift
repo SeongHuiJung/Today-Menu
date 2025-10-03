@@ -208,11 +208,22 @@ final class CalendarReviewListCell: BaseTableViewCell {
             companionLabel.isHidden = true
         }
         
-        if let photoPath = review.photos.first {
-            // TODO: 사진 로드
+        // 사진이 있으면 ReviewPicture 폴더에서 로드
+        if let photoFileName = review.photos.first, !photoFileName.isEmpty {
+            if let image = ImageStorageManager.shared.loadImage(fileName: photoFileName, type: .review) {
+                foodImageView.image = image
+                foodImageView.contentMode = .scaleAspectFill
+            } else {
+                // 이미지 로드 실패 시 기본 아이콘
+                foodImageView.image = UIImage(systemName: "photo")
+                foodImageView.tintColor = .systemGray3
+                foodImageView.contentMode = .scaleAspectFit
+            }
         } else {
+            // 사진이 없으면 기본 아이콘
             foodImageView.image = UIImage(systemName: "photo")
             foodImageView.tintColor = .systemGray3
+            foodImageView.contentMode = .scaleAspectFit
         }
     }
 }
