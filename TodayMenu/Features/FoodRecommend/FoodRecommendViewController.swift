@@ -53,6 +53,7 @@ final class FoodRecommendViewController: BaseViewController {
         output.routeToReview
             .emit(with: self) { owner, item in
                 let reviewVC = MakeFoodReviewViewController(food: item, menuSelectedTime: owner.menuSelectedTime)
+                reviewVC.hidesBottomBarWhenPushed = true
                 owner.navigationController?.pushViewController(reviewVC, animated: true)
             }
             .disposed(by: bag)

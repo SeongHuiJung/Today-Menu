@@ -19,4 +19,6 @@ enum FontSize {
     static let subTitle: CGFloat = 18
     static let small: CGFloat = 14
     static let hint: CGFloat = 13
+    static let bold: CGFloat = 14
+    static let context: CGFloat = 13
 }

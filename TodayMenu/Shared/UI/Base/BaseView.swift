@@ -21,7 +21,7 @@ class BaseView: UIView {
     func configureLayout() {}
     
     func configureView() {
-        self.backgroundColor = .customBackground
+        self.backgroundColor = .white
     }
     
     @available(*, unavailable)

@@ -75,11 +75,9 @@ class StarButton: UIButton {
     
     private func updateAppearance() {
         if isSelected {
-            setTitle("★", for: .normal)
-            setTitleColor(UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0), for: .normal)
+            setImage(UIImage(named: "fullStar"), for: .normal)
         } else {
-            setTitle("☆", for: .normal)
-            setTitleColor(.lightGray, for: .normal)
+            setImage(UIImage(named: "emptyStar"), for: .normal)
         }
     }
 }

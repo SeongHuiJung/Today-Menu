@@ -70,7 +70,7 @@ class CustomTextView: UITextView {
     static func reviewStyle(placeholder: String) -> CustomTextView {
         let textView = CustomTextView()
         textView.placeholder = placeholder
-        textView.font = .systemFont(ofSize: FontSize.regular)
+        textView.font = .systemFont(ofSize: FontSize.context)
         textView.backgroundColor = .white
         textView.textColor = .black
         textView.layer.cornerRadius = 8

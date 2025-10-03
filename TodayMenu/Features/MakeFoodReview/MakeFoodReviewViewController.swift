@@ -25,13 +25,7 @@ final class MakeFoodReviewViewController: BaseViewController {
     // 선택된 사진들
     private let selectedImagesRelay = BehaviorRelay<[UIImage]>(value: [])
     
-    private let saveButton = {
-        let button = UIButton()
-        button.setTitle("저장", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
-        return button
-    }()
+    private let saveButton: UIButton? = nil
     
     init(food: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.viewModel = MakeFoodReviewViewModel(selectedFood: food, menuSelectedTime: menuSelectedTime)
@@ -53,7 +47,6 @@ final class MakeFoodReviewViewController: BaseViewController {
     
     override func configureView() {
         super.configureView()
-        view.backgroundColor = UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0)
         title = "새 리뷰"
         navigationController?.navigationBar.prefersLargeTitles = false
     }
@@ -64,14 +57,13 @@ extension MakeFoodReviewViewController {
     private func setupNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .point
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.backgroundColor = .white
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.fontBlack]
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         
-        navigationController?.navigationBar.tintColor = .white
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: saveButton)
+        navigationController?.navigationBar.tintColor = .fontBlack
     }
     
     private func setupRestaurantSearchButton() {
@@ -126,7 +118,7 @@ extension MakeFoodReviewViewController {
             starTaps: starTaps,
             tagTaps: tagTaps,
             photoUploadTap: mainView.photoCaptureButton.rx.tap.asObservable(),
-            saveTap: saveButton.rx.tap.asObservable(),
+            saveTap: mainView.saveButton.rx.tap.asObservable(),
             foodNameText: mainView.foodNameTextField.rx.text.orEmpty.asObservable(),
             storeNameText: Observable.just(""),
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
