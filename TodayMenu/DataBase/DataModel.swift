@@ -44,17 +44,19 @@ class Food: Object {
     @Persisted var name: String // 음식 이름
     @Persisted var cuisine: String // 메뉴 카테고리 대분류 (예: 한식, 중식, 일식)
     @Persisted var category: String // 메뉴 카테고리 중분류 (예: 피자, 돈까스, 초밥, 스테이크)
+    @Persisted var foodId: String // 음식 고유번호
     
     // Inverse Relationship
     @Persisted(originProperty: "food")
     var review: LinkingObjects<Review> // 리뷰 역참조
     
-    convenience init(name: String, cuisine: String = "", category: String = "") {
+    convenience init(name: String, cuisine: String = "", category: String = "", foodId: String) {
         self.init()
         
         self.name = name
         self.cuisine = cuisine
         self.category = category
+        self.foodId = foodId
     }
 }
 

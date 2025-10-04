@@ -15,7 +15,8 @@ final class MakeFoodReviewViewModel {
     private let disposeBag = DisposeBag()
     private let selectedFood: FoodRecommendation
     private let menuSelectedTime: Date
-    private let repository = ReviewRepository()
+    private let reviewRepository = ReviewRepository()
+    private let foodRepository = FoodRepository()
     
     struct Input {
         let starTaps: [Observable<Void>]
@@ -148,18 +149,18 @@ final class MakeFoodReviewViewModel {
         
         let showCompanionTextField = selectedTagRelay
             .map { tagIndex in
-                return tagIndex >= 1 // '혼자' 가 아닌 다른 태그 선택시
+                return tagIndex >= 1
             }
             .asDriver(onErrorJustReturn: false)
         
         let companionTextFieldClear = selectedTagRelay
-            .filter { $0 == 0 } // "혼자" 선택 시
+            .filter { $0 == 0 }
             .map { _ in () }
             .asDriver(onErrorJustReturn: ())
         
         let formData = Observable.combineLatest(
             input.foodNameText.startWith(selectedFood.title),
-            input.storeNameText.startWith(selectedFood.place),
+            input.storeNameText.startWith(""),
             starRatingRelay.asObservable(),
             input.commentText.startWith(""),
             input.companionText.startWith("")
@@ -221,7 +222,6 @@ final class MakeFoodReviewViewModel {
         let popAfterSave = saveSuccess.map { _ in () }
         let popView = popAfterSave
         
-        // 사진 추가 버튼 탭 시, 최대 5장 체크
         let showImagePicker = input.photoUploadTap
             .withLatestFrom(selectedPhotosRelay)
             .filter { $0.count < 5 }
@@ -284,12 +284,11 @@ extension MakeFoodReviewViewModel {
                 return Disposables.create()
             }
             
-            // Food 객체 생성
-            let foodName = self.foodNameRelay.value.isEmpty ? self.selectedFood.title : self.foodNameRelay.value
-            let food = Food(
-                name: foodName,
-                cuisine: self.selectedFood.cuisine, // 대분류 (한식/중식/일식)
-                category: self.selectedFood.category // 중분류 (피자/돈까스/초밥)
+            // FoodRepository를 사용하여 category별 고유 foodId 관리
+            let food = self.foodRepository.getOrCreateFood(
+                name: self.selectedFood.title,
+                cuisine: self.selectedFood.cuisine,
+                category: self.selectedFood.category
             )
             
             // Restaurant 객체 생성
@@ -305,9 +304,7 @@ extension MakeFoodReviewViewModel {
                     cuisine: selectedRestaurant.categoryName,
                     restaurantId: selectedRestaurant.restaurantId
                 )
-            }
-            // 선택된 식당 정보가 없으면 식당 정보를 저장하지 않음
-            else {
+            } else {
                 restaurant = nil
             }
             
@@ -317,13 +314,10 @@ extension MakeFoodReviewViewModel {
                 let companionType = CompanionType.allCases[self.selectedTagRelay.value]
                 let companionName = self.companionNameRelay.value
                 
-                // 혼자 태그 선택 시: name 없이 type만 저장
                 if companionType == .alone {
                     let companion = Companion(type: .alone, name: nil)
                     companions.append(companion)
-                }
-                // 다른 태그 선택 시: name이 비어있어도 type은 저장
-                else {
+                } else {
                     let name = companionName.isEmpty ? nil : companionName
                     let companion = Companion(type: companionType, name: name)
                     companions.append(companion)
@@ -331,6 +325,7 @@ extension MakeFoodReviewViewModel {
             }
             
             // Review 객체 생성 (사진 없이)
+            // Review 객체 생성
             let review = Review(
                 food: [food],
                 restaurant: restaurant,
@@ -341,8 +336,8 @@ extension MakeFoodReviewViewModel {
                 ateAt: self.eatTimeRelay.value
             )
             
-            // Realm에 먼저 저장하여 Review ID 획득
-            self.repository.saveReview(review)
+            // Review 저장
+            self.reviewRepository.saveReview(review)
                 .subscribe(onNext: { result in
                     switch result {
                     case .success:
