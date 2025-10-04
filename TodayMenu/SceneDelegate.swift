@@ -15,6 +15,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
         
+        // 앱 최초 실행 시 FoodType 초기 데이터 생성
+        FoodTypeInitializer.initializeIfNeeded()
+        
         window = UIWindow(windowScene: scene)
         let tab = TransitionManager.shared.getMainTabViewController()
         window?.rootViewController = tab

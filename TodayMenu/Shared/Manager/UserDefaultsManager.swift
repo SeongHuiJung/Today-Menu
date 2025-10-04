@@ -10,6 +10,9 @@ import Foundation
 class UserDefaultsManager {
     @UserDefault(key: "isOnboardingCompleted", defaultValue: false)
     static var isOnboardingCompleted: Bool
+    
+    @UserDefault(key: "hasInitializedFoodTypes", defaultValue: false)
+    static var hasInitializedFoodTypes: Bool
 }
 
 @propertyWrapper

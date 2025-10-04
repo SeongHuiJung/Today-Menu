@@ -14,7 +14,7 @@ final class MockDataGenerator {
         let reviewRepository = ReviewRepository()
         let foodRepository = FoodRepository()
         
-        // 9월 Mock 데이터
+        // Mock 데이터
         let mockReviews: [(day: Int, foodName: String, restaurantName: String, rating: Double, comment: String?, companion: CompanionType, companionName: String?, cuisine: String, category: String, restaurantId: String)] = [
             (16, "비빔밥", "한옥마을", 4.5, "도우가 정말 쫄깃하고 치즈가 진짜 맛있어요!", .alone, nil, "한식", "비빔밥", "rest001"),
             (17, "라멘", "라멘야", 4.0, "국물이 진하고 면발이 쫄깃해요", .friend, "철수", "일식", "라멘", "rest002"),
@@ -76,7 +76,7 @@ final class MockDataGenerator {
                 companion: [companion],
                 photos: [],
                 ateAt: date,
-                averagePrice: Int.random(in: 8000...25000),
+                averagePrice: nil,
                 emoji: nil
             )
             
@@ -92,13 +92,7 @@ final class MockDataGenerator {
                 })
         }
         
-        print("9월 Mock 데이터 20개 생성 완료")
-        
         let allFoodTypes = foodRepository.getAllCategories()
-        print("총 FoodType 개수: \(allFoodTypes.count)")
-        for foodType in allFoodTypes {
-            print("- \(foodType.category) (\(foodType.cuisine)) - foodId: \(foodType.foodId)")
-        }
     }
     
     static func clearAllData() {
