@@ -10,11 +10,9 @@ import RxSwift
 import RxCocoa
 import CoreLocation
 
-final class RestaurantSearchViewModel: NSObject {
+final class RestaurantSearchViewModel {
     
     private let disposeBag = DisposeBag()
-    private lazy var locationManager = CLLocationManager()
-    private let currentLocationRelay = BehaviorRelay<CLLocation?>(value: nil)
     
     struct Input {
         let searchButtonTapped: Observable<Void>
@@ -27,38 +25,6 @@ final class RestaurantSearchViewModel: NSObject {
     }
     
     private let errorMessage = PublishRelay<String>()
-    
-    override init() {
-        super.init()
-        setupLocationManager()
-        requestLocation()
-    }
-    
-    private func setupLocationManager() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    }
-    
-    private func requestLocation() {
-        let status: CLAuthorizationStatus
-        if #available(iOS 14.0, *) {
-            status = locationManager.authorizationStatus
-        } else {
-            status = CLLocationManager.authorizationStatus()
-        }
-        
-        switch status {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .denied, .restricted:
-            errorMessage.accept(LocationError.authorizationDenied.message)
-        case .authorizedWhenInUse, .authorizedAlways:
-            locationManager.requestLocation()
-        default:
-            // TODO: 위치 권한 껐을때 처리
-            break
-        }
-    }
     
     func transform(input: Input) -> Output {
         let searchResults = PublishRelay<[RestaurantData]>()
@@ -85,8 +51,8 @@ final class RestaurantSearchViewModel: NSObject {
     }
     
     private func searchRestaurant(query: String) -> Observable<[RestaurantData]> {
-        // 현재 위치 가져오기
-        let location = currentLocationRelay.value
+        // FoodMapViewModel의 현재 위치 가져오기
+        let location = FoodMapViewModel.shared.currentLocation.value
         let latitude: String
         let longitude: String
         
@@ -94,7 +60,7 @@ final class RestaurantSearchViewModel: NSObject {
             latitude = String(location.coordinate.latitude)
             longitude = String(location.coordinate.longitude)
         } else {
-            // 위치를 가져오지 못한 경우 기본 위치 값 지정
+            // 위치를 가져오지 못한 경우 기본 위치 값 지정 (서울시청)
             latitude = "37.5665"
             longitude = "126.9780"
         }
@@ -117,25 +83,5 @@ final class RestaurantSearchViewModel: NSObject {
                     return []
                 }
             }
-    }
-}
-
-// MARK: - CLLocationManagerDelegate
-extension RestaurantSearchViewModel: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.first else { return }
-        currentLocationRelay.accept(location)
-    }
-    
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        requestLocation()
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        requestLocation()
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("위치 가져오기 실패: \(error.localizedDescription)")
     }
 }

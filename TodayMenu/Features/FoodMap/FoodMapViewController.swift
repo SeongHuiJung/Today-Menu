@@ -13,7 +13,7 @@ import CoreLocation
 
 final class FoodMapViewController: UIViewController {
     
-    private let viewModel = FoodMapViewModel()
+    private let viewModel = FoodMapViewModel.shared
     private let disposeBag = DisposeBag()
     private let mainView = FoodMapView()
     private let repository = ReviewRepository()

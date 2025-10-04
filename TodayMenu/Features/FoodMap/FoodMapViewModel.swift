@@ -13,6 +13,9 @@ import MapKit
 
 final class FoodMapViewModel: NSObject {
     
+    // 싱글톤 인스턴스
+    static let shared = FoodMapViewModel()
+    
     private let disposeBag = DisposeBag()
     private lazy var locationManager = CLLocationManager()
     private let repository = ReviewRepository()
@@ -22,6 +25,9 @@ final class FoodMapViewModel: NSObject {
     private let authorizationStatusSubject = PublishSubject<CLAuthorizationStatus>()
     private let locationErrorSubject = PublishSubject<LocationError>()
     private let restaurantsSubject = BehaviorSubject<[Restaurant]>(value: [])
+    
+    // 현재 위치 저장 (외부에서 접근 가능)
+    private(set) var currentLocation = BehaviorRelay<CLLocation?>(value: nil)
     
     struct Input {
         let showCurrentLocationTap: Observable<Void>
@@ -144,6 +150,9 @@ final class FoodMapViewModel: NSObject {
 extension FoodMapViewModel: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
+        
+        // 위치 저장
+        currentLocation.accept(location)
         
         locationUpdateSubject.onNext(location)
         locationManager.stopUpdatingLocation()
