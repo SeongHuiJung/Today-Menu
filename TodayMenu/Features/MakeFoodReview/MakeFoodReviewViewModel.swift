@@ -284,8 +284,8 @@ extension MakeFoodReviewViewModel {
                 return Disposables.create()
             }
             
-            // FoodRepository를 사용하여 category별 고유 foodId 관리
-            let food = self.foodRepository.getOrCreateFood(
+            // FoodRepository를 사용하여 FoodReview 생성
+            let foodReview = self.foodRepository.createFoodReview(
                 name: self.selectedFood.title,
                 cuisine: self.selectedFood.cuisine,
                 category: self.selectedFood.category
@@ -327,7 +327,7 @@ extension MakeFoodReviewViewModel {
             // Review 객체 생성 (사진 없이)
             // Review 객체 생성
             let review = Review(
-                food: [food],
+                food: [foodReview],
                 restaurant: restaurant,
                 rating: Double(self.starRatingRelay.value),
                 comment: self.commentRelay.value.isEmpty ? nil : self.commentRelay.value,

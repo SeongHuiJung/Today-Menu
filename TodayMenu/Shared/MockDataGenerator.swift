@@ -48,8 +48,8 @@ final class MockDataGenerator {
                 continue
             }
             
-            // FoodRepository를 사용하여 category별 고유 foodId 자동 관리
-            let food = foodRepository.getOrCreateFood(
+            // FoodRepository를 사용하여 FoodReview 생성
+            let foodReview = foodRepository.createFoodReview(
                 name: mockData.foodName,
                 cuisine: mockData.cuisine,
                 category: mockData.category
@@ -69,7 +69,7 @@ final class MockDataGenerator {
             
             // Review 생성
             let review = Review(
-                food: [food],
+                food: [foodReview],
                 restaurant: restaurant,
                 rating: mockData.rating,
                 comment: mockData.comment,
@@ -85,7 +85,7 @@ final class MockDataGenerator {
                 .subscribe(onNext: { result in
                     switch result {
                     case .success:
-                        print("Mock 데이터 저장 성공: \(mockData.foodName) - \(mockData.day)일 (category: \(mockData.category), foodId: \(food.foodId))")
+                        print("Mock 데이터 저장 성공: \(mockData.foodName) - \(mockData.day)일 (category: \(mockData.category), foodId: \(foodReview.foodId))")
                     case .failure(let error):
                         print("Mock 데이터 저장 실패: \(error.localizedDescription)")
                     }
@@ -93,6 +93,12 @@ final class MockDataGenerator {
         }
         
         print("9월 Mock 데이터 20개 생성 완료")
+        
+        let allFoodTypes = foodRepository.getAllCategories()
+        print("총 FoodType 개수: \(allFoodTypes.count)")
+        for foodType in allFoodTypes {
+            print("- \(foodType.category) (\(foodType.cuisine)) - foodId: \(foodType.foodId)")
+        }
     }
     
     static func clearAllData() {

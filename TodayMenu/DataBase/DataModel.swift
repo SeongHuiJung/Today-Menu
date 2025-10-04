@@ -10,7 +10,7 @@ import RealmSwift
 
 class Review: Object {
     @Persisted(primaryKey: true) var id: ObjectId
-    @Persisted var food: List<Food> // 메뉴 1:N
+    @Persisted var food: List<FoodReview> // 메뉴 1:N
     @Persisted var restaurant: Restaurant? // 음식점 1:1
     @Persisted var rating: Double // 0.5 단위 평점
     @Persisted var comment: String? // 코멘트
@@ -22,7 +22,7 @@ class Review: Object {
     @Persisted var averagePrice: Int? // 음식 평균 가격
     @Persisted var emoji: String? // 이모지 이름
     
-    convenience init(food: [Food], restaurant: Restaurant? = nil, rating: Double, comment: String? = nil, companion: [Companion] = [], photos: [String] = [], ateAt: Date, averagePrice: Int? = nil, emoji: String? = nil) {
+    convenience init(food: [FoodReview], restaurant: Restaurant? = nil, rating: Double, comment: String? = nil, companion: [Companion] = [], photos: [String] = [], ateAt: Date, averagePrice: Int? = nil, emoji: String? = nil) {
         self.init()
         
         self.food.append(objectsIn: food)
@@ -39,24 +39,50 @@ class Review: Object {
     }
 }
 
-class Food: Object {
+class FoodReview: Object {
     @Persisted(primaryKey: true) var id: ObjectId
     @Persisted var name: String // 음식 이름
-    @Persisted var cuisine: String // 메뉴 카테고리 대분류 (예: 한식, 중식, 일식)
-    @Persisted var category: String // 메뉴 카테고리 중분류 (예: 피자, 돈까스, 초밥, 스테이크)
     @Persisted var foodId: String // 음식 고유번호
     
     // Inverse Relationship
     @Persisted(originProperty: "food")
     var review: LinkingObjects<Review> // 리뷰 역참조
     
-    convenience init(name: String, cuisine: String = "", category: String = "", foodId: String) {
+    convenience init(name: String, foodId: String) {
         self.init()
         
         self.name = name
+        self.foodId = foodId
+    }
+}
+
+class FoodType: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var cuisine: String // 메뉴 카테고리 대분류 (예: 한식, 중식, 일식)
+    @Persisted var category: String // 메뉴 카테고리 중분류 (예: 피자, 돈까스, 초밥, 스테이크)
+    @Persisted var foodId: String // 음식 고유번호 (category별 고유값)
+    
+    convenience init(cuisine: String, category: String, foodId: String) {
+        self.init()
+        
         self.cuisine = cuisine
         self.category = category
         self.foodId = foodId
+    }
+}
+
+class RecommendHistory: Object {
+    @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var foodId: String // 음식 고유번호 (FoodType의 foodId)
+    @Persisted var isAccepted: Bool // 추천됐을때 accept 여부
+    @Persisted var createdAt: Date // 생성 시각
+    
+    convenience init(foodId: String, isAccepted: Bool) {
+        self.init()
+        
+        self.foodId = foodId
+        self.isAccepted = isAccepted
+        self.createdAt = Date()
     }
 }
 

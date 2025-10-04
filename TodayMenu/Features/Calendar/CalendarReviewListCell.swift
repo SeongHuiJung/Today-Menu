@@ -190,7 +190,18 @@ final class CalendarReviewListCell: BaseTableViewCell {
         timeLabel.text = dateFormatter.string(from: review.ateAt)
         
         foodNameLabel.text = review.food.first?.name ?? "음식"
-        categoryLabel.text = review.food.first?.category ?? ""
+        
+        // FoodReview의 foodId로 FoodType 찾기
+        if let foodReview = review.food.first {
+            let foodRepository = FoodRepository()
+            if let foodType = foodRepository.getFoodType(by: foodReview.foodId) {
+                categoryLabel.text = foodType.category
+            } else {
+                categoryLabel.text = ""
+            }
+        } else {
+            categoryLabel.text = ""
+        }
         
         setupStarRating(Int(review.rating))
         
