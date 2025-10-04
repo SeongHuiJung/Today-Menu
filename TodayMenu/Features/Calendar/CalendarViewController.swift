@@ -21,7 +21,6 @@ final class CalendarViewController: BaseViewController {
     private let dateSelectedSubject = PublishSubject<Date>()
     private let weekDateSelectedSubject = PublishSubject<Date>()
     private let reviewSelectedSubject = PublishSubject<Review>()
-    private let calendarBackTappedSubject = PublishSubject<Void>()
     
     private var reviewsByDate: [String: [Review]] = [:]
     private var currentReviews: [Review] = []
@@ -113,6 +112,22 @@ final class CalendarViewController: BaseViewController {
         return tableView
     }()
     
+    private let showCalendarButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("달력 전체보기", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        button.backgroundColor = .point
+        button.layer.cornerRadius = 18
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.2
+        button.alpha = 0
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        return button
+    }()
+    
     // MARK: - Init
     init(viewModel: CalendarViewModel = CalendarViewModel()) {
         self.viewModel = viewModel
@@ -153,6 +168,7 @@ final class CalendarViewController: BaseViewController {
         weekContainerView.addSubview(dateStackView)
         weekContainerView.addSubview(weekScrollView)
         view.addSubview(reviewTableView)
+        view.addSubview(showCalendarButton)
         
         [yearLabel, monthLabel].forEach {
             dateStackView.addArrangedSubview($0)
@@ -172,8 +188,14 @@ final class CalendarViewController: BaseViewController {
             $0.edges.equalToSuperview()
         }
         
+        showCalendarButton.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            $0.centerX.equalToSuperview()
+            $0.height.equalTo(36)
+        }
+        
         weekContainerView.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.top.equalTo(showCalendarButton.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(80)
         }
@@ -235,7 +257,7 @@ private extension CalendarViewController {
             dateSelected: dateSelectedSubject.asObservable(),
             weekDateSelected: weekDateSelectedSubject.asObservable(),
             reviewSelected: reviewSelectedSubject.asObservable(),
-            calendarBackTapped: calendarBackTappedSubject.asObservable()
+            calendarBackTapped: showCalendarButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -318,6 +340,7 @@ private extension CalendarViewController {
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
             self.weekContainerView.alpha = 1
             self.reviewTableView.alpha = 1
+            self.showCalendarButton.alpha = 1
             self.view.layoutIfNeeded()
         } completion: { [weak self] _ in
             guard let self = self else { return }
@@ -345,6 +368,7 @@ private extension CalendarViewController {
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
             self.weekContainerView.alpha = 0
             self.reviewTableView.alpha = 0
+            self.showCalendarButton.alpha = 0
             self.view.layoutIfNeeded()
         }
     }
