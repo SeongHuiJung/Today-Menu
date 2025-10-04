@@ -70,11 +70,10 @@ final class FoodMapViewController: UIViewController {
         for annotation in mainView.mapView.annotations {
             guard !(annotation is MKUserLocation) else { continue }
             
-            if let view = mainView.mapView.view(for: annotation) {
+            if mainView.mapView.view(for: annotation) != nil {
                 let annotationPoint = mainView.mapView.convert(annotation.coordinate, toPointTo: mainView.mapView)
                 let distance = hypot(point.x - annotationPoint.x, point.y - annotationPoint.y)
                 
-                // annotation 근처를 탭했으면 (44pt 반경)
                 if distance < 44 {
                     hitAnnotation = true
                     break
@@ -211,26 +210,35 @@ extension FoodMapViewController {
     
     private func showRestaurantDetail(for restaurant: Restaurant) {
         currentRestaurant = restaurant
+        
+        // 즉시 FloatingView 표시 (로딩 상태)
+        mainView.showFloatingView(
+            restaurantName: restaurant.name,
+            lastVisit: Date(), // 임시값
+            averageRating: 0.0, // 임시값
+            cuisine: restaurant.cuisine
+        )
+        
+        // 비동기로 데이터 로드 후 업데이트
         repository.fetchReviewsByRestaurantId(restaurantId: restaurant.restaurantId)
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] reviews in
                 guard let self = self else { return }
-                self.displayRestaurantInfo(restaurant: restaurant, reviews: reviews)
+                self.updateRestaurantInfo(restaurant: restaurant, reviews: reviews)
             })
             .disposed(by: disposeBag)
     }
     
-    private func displayRestaurantInfo(restaurant: Restaurant, reviews: [Review]) {
+    private func updateRestaurantInfo(restaurant: Restaurant, reviews: [Review]) {
         guard !reviews.isEmpty else { return }
         
         let lastVisit = reviews.map { $0.ateAt }.max() ?? Date()
         let averageRating = reviews.reduce(0.0) { $0 + $1.rating } / Double(reviews.count)
         
-        mainView.showFloatingView(
-            restaurantName: restaurant.name,
+        // 데이터 업데이트
+        mainView.updateFloatingView(
             lastVisit: lastVisit,
-            averageRating: averageRating,
-            cuisine: restaurant.cuisine
+            averageRating: averageRating
         )
     }
     

@@ -191,6 +191,15 @@ final class RestaurantDetailFloatingView: BaseView {
         updateStars(rating: averageRating)
     }
     
+    func updateData(lastVisit: Date, averageRating: Double) {
+        ratingLabel.text = String(format: "%.1f점", averageRating)
+        reviewDateLabel.text = formatDate(lastVisit)
+        
+        UIView.animate(withDuration: 0.2) {
+            self.updateStars(rating: averageRating)
+        }
+    }
+    
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")

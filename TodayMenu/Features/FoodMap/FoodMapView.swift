@@ -86,9 +86,13 @@ final class FoodMapView: BaseView {
             make.bottom.equalTo(safeAreaLayoutGuide).offset(0)
         }
         
-        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
             self.layoutIfNeeded()
         }
+    }
+    
+    func updateFloatingView(lastVisit: Date, averageRating: Double) {
+        floatingView.updateData(lastVisit: lastVisit, averageRating: averageRating)
     }
     
     func hideFloatingView() {
