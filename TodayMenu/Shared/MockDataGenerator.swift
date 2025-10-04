@@ -112,4 +112,18 @@ final class MockDataGenerator {
                 print("모든 데이터 삭제 완료")
             })
     }
+    
+    static func clearRecommendHistory() {
+        do {
+            let realm = try Realm()
+            let histories = realm.objects(RecommendHistory.self)
+            let count = histories.count
+            try realm.write {
+                realm.delete(histories)
+            }
+            print("RecommendHistory 삭제 완료: \(count)개")
+        } catch {
+            print("RecommendHistory 삭제 실패: \(error)")
+        }
+    }
 }

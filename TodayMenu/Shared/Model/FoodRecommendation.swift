@@ -6,27 +6,45 @@
 //
 
 import Foundation
+import RealmSwift
+import RxSwift
 
 struct FoodRecommendation: Equatable {
-    let emoji: String
+    let emoji: String?
     let title: String
-    let place: String
-    let distanceKm: Double
     let cuisine: String
     let category: String
 }
 
 protocol RecommendationProvider {
-    func all() -> [FoodRecommendation]
+    func getRecommendation() -> Observable<FoodRecommendation?>
 }
 
-final class MockRecommendationProvider: RecommendationProvider {
-    func all() -> [FoodRecommendation] {
-        return [
-            .init(emoji: "🍖", title: "매운돈까스", place: "맛있는집", distanceKm: 0.8, cuisine: Cuisine.korean.rawValue, category: "돈까스"),
-            .init(emoji: "🍜", title: "마라탕", place: "라화방", distanceKm: 1.2, cuisine: Cuisine.chinese.rawValue, category: "마라탕"),
-            .init(emoji: "🍣", title: "모듬초밥", place: "스시나니", distanceKm: 0.5, cuisine: Cuisine.japanese.rawValue, category: "초밥"),
-            .init(emoji: "🍕", title: "페페로니 피자", place: "피자마루", distanceKm: 2.4, cuisine: Cuisine.western.rawValue, category: "피자"),
-        ]
+final class RealmRecommendationProvider: RecommendationProvider {
+    private let service = FoodRecommendService()
+    
+    func getRecommendation() -> Observable<FoodRecommendation?> {
+        return service.getRecommendedFood()
+            .map { foodType -> FoodRecommendation? in
+                guard let foodType = foodType else { return nil }
+                return FoodRecommendation(
+                    emoji: nil,
+                    title: foodType.category,
+                    cuisine: foodType.cuisine,
+                    category: foodType.category
+                )
+            }
     }
 }
+
+//final class MockRecommendationProvider: RecommendationProvider {
+//    func getRecommendation() -> Observable<FoodRecommendation?> {
+//        let mock = FoodRecommendation(
+//            emoji: "🍖",
+//            title: "매운돈까스",
+//            cuisine: Cuisine.korean.rawValue,
+//            category: "돈까스"
+//        )
+//        return Observable.just(mock)
+//    }
+//}

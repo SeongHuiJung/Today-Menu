@@ -158,9 +158,9 @@ extension MakeFoodReviewViewController {
             .disposed(by: disposeBag)
         
         output.initialData
-            .drive(with: self) { owner, food in
-                owner.mainView.populateInitialData(foodName: food.title, storeName: food.place)
-            }
+            .drive(onNext: { [weak self] food in
+                self?.mainView.populateInitialData(foodName: food.title, storeName: "")
+            })
             .disposed(by: disposeBag)
         
         output.initialEatTime
