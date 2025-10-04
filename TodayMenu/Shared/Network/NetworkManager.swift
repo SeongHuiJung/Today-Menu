@@ -30,14 +30,6 @@ final class NetworkManager {
                         observer.onCompleted()
                     case .failure:
                         
-                        // 데이터가 아예 없는 경우 (서버가 사라진 경우)
-                        guard let data = response.data else {
-                            let error = ErrorType.Unknown
-                            observer.onNext(.failure(error))
-                            observer.onCompleted()
-                            return
-                        }
-                        
                         // 네트워크 연결 오류 상태
                         if let error = response.error, let afError = error.asAFError {
 
@@ -49,6 +41,14 @@ final class NetworkManager {
                             }
                         }
 
+                        // 데이터가 아예 없는 경우
+                        guard let data = response.data else {
+                            let error = ErrorType.Unknown
+                            observer.onNext(.failure(error))
+                            observer.onCompleted()
+                            return
+                        }
+                        
                         // 네트워크 연결 성공
                         do {
                             let data = try JSONDecoder().decode(ErrorModel.self, from: data)

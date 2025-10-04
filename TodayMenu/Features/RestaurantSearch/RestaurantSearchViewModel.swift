@@ -108,12 +108,12 @@ final class RestaurantSearchViewModel: NSObject {
         
         return NetworkManager.shared
             .callRequest(router: .searchPlace(searchPlaceDataSet: searchDataSet), decodingType: MapData.self)
-            .map { result in
+            .map { [weak self] result in
                 switch result {
                 case .success(let mapData):
                     return mapData.documents
                 case .failure(let error):
-                    print("검색 실패: \(error)")
+                    self?.errorMessage.accept(error.message)
                     return []
                 }
             }
