@@ -46,12 +46,52 @@ final class FoodMapViewController: UIViewController {
         mainView.mapView.showsUserLocation = true
         mainView.mapView.delegate = self
         
+        // 지도 빈 곳 탭 제스처
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleMapTap(_:)))
+        tapGesture.delegate = self
+        mainView.mapView.addGestureRecognizer(tapGesture)
+        
         mainView.floatingView.onClose = { [weak self] in
-            self?.mainView.hideFloatingView()
+            self?.deselectAllAnnotations()
         }
     
         mainView.floatingView.onReviewButtonTap = { [weak self] in
             self?.showReviewList()
+        }
+    }
+    
+    @objc private func handleMapTap(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: mainView.mapView)
+        
+        // 탭한 위치에 annotation이 있는지 확인
+        let point = gesture.location(in: mainView.mapView)
+        var hitAnnotation = false
+        
+        for annotation in mainView.mapView.annotations {
+            guard !(annotation is MKUserLocation) else { continue }
+            
+            if let view = mainView.mapView.view(for: annotation) {
+                let annotationPoint = mainView.mapView.convert(annotation.coordinate, toPointTo: mainView.mapView)
+                let distance = hypot(point.x - annotationPoint.x, point.y - annotationPoint.y)
+                
+                // annotation 근처를 탭했으면 (44pt 반경)
+                if distance < 44 {
+                    hitAnnotation = true
+                    break
+                }
+            }
+        }
+        
+        // annotation을 탭하지 않았으면 모든 선택 해제
+        if !hitAnnotation {
+            print("지도 빈 곳 탭 → 모든 Annotation 선택 해제")
+            deselectAllAnnotations()
+        }
+    }
+    
+    private func deselectAllAnnotations() {
+        for annotation in mainView.mapView.selectedAnnotations {
+            mainView.mapView.deselectAnnotation(annotation, animated: true)
         }
     }
     
@@ -244,11 +284,34 @@ extension FoodMapViewController: MKMapViewDelegate {
               let restaurant = annotation.restaurant else {
             return
         }
+        print("Annotation 선택: \(restaurant.name)")
+        
+        // 선택이 변경될 때 FloatingView 강제 표시
         showRestaurantDetail(for: restaurant)
     }
     
     func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
-        mainView.hideFloatingView()
+        print("Annotation 선택 해제: \(view.annotation?.title ?? "Unknown")")
+        
+        // 비동기로 처리하여 didSelect가 먼저 실행되도록 함
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // 다른 annotation이 선택되었는지 확인
+            if self.mainView.mapView.selectedAnnotations.isEmpty {
+                print("모든 Annotation 선택 해제 → FloatingView 숨김")
+                self.mainView.hideFloatingView()
+            } else {
+                print("다른 Annotation이 선택됨 → FloatingView 유지")
+            }
+        }
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension FoodMapViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
 
