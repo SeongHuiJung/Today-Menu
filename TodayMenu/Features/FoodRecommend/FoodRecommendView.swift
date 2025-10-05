@@ -34,6 +34,11 @@ final class FoodRecommendView: BaseView {
         button.isHidden = true
         return button
     }()
+    let reDrawButton = {
+        let button = BarButton(title: "다시뽑기", size: FontSize.regular, textColor: .fontLightGray, backgroundColor: .customLightGray)
+        button.isHidden = true
+        return button
+    }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -61,6 +66,7 @@ final class FoodRecommendView: BaseView {
         passButton.isHidden = true
         acceptButton.isHidden = true
         reviewButton.isHidden = true
+        reDrawButton.isHidden = true
     }
     
     func showRecommendedUI() {
@@ -68,18 +74,20 @@ final class FoodRecommendView: BaseView {
         passButton.isHidden = false
         acceptButton.isHidden = false
         reviewButton.isHidden = true
+        reDrawButton.isHidden = true
     }
     
     func showAcceptedUI(_ isAccepted: Bool) {
         passButton.isHidden   = isAccepted
         acceptButton.isHidden = isAccepted
         reviewButton.isHidden = !isAccepted
+        reDrawButton.isHidden = !isAccepted
     }
     
     // MARK: - BaseView
     override func configureHierarchy() {
         addSubview(cardContainer)
-        [cardContainer, recommendButton, passButton, acceptButton, reviewButton].forEach { self.addSubview($0) }
+        [cardContainer, recommendButton, passButton, acceptButton, reviewButton, reDrawButton].forEach { self.addSubview($0) }
         [emojiLabel, titleLabel, chipLabel].forEach { cardContainer.addSubview($0) }
     }
     
@@ -127,6 +135,12 @@ final class FoodRecommendView: BaseView {
             $0.top.equalTo(cardContainer.snp.bottom).offset(24)
             $0.horizontalEdges.equalToSuperview().inset(24)
             $0.height.equalTo(56)
+        }
+        
+        reDrawButton.snp.makeConstraints {
+            $0.top.equalTo(reviewButton.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(24)
+            $0.height.equalTo(48)
         }
     }
 }

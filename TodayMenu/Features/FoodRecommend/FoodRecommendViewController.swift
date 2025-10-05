@@ -36,7 +36,10 @@ final class FoodRecommendViewController: BaseViewController {
     private func bind() {
         let input = FoodRecommendViewModel.Input(
             recommendButtonTap: mainView.recommendButton.rx.tap.asObservable(),
-            passTap: mainView.passButton.rx.tap.asObservable(),
+            passTap: Observable.merge(
+                mainView.passButton.rx.tap.asObservable(),
+                mainView.reDrawButton.rx.tap.asObservable()
+            ),
             acceptTap: mainView.acceptButton.rx.tap.asObservable(),
             reviewTap: mainView.reviewButton.rx.tap.asObservable()
         )
