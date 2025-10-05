@@ -204,7 +204,7 @@
 				DEVELOPMENT_TEAM = CX8QXFQAMZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayMenu/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "점메추";
+				INFOPLIST_KEY_CFBundleDisplayName = "모모찌";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -238,7 +238,7 @@
 				DEVELOPMENT_TEAM = CX8QXFQAMZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayMenu/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "점메추";
+				INFOPLIST_KEY_CFBundleDisplayName = "모모찌";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";

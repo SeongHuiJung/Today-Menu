@@ -17,4 +17,9 @@ class AlertManager {
         alert.addAction(okButton)
         return alert
     }
+    
+    func makeInfoAlertWithPop(title: String, message: String) -> UIAlertController {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        return alert
+    }
 }

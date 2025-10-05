@@ -224,7 +224,11 @@ extension MakeFoodReviewViewController {
         
         output.showSaveSuccess
             .emit(with: self) { owner, message in
-                let alert = AlertManager.shared.makeInfoAlert(title: "성공", message: message)
+                let alert = AlertManager.shared.makeInfoAlertWithPop(title: "리뷰 작성 성공", message: message)
+                // 확인 버튼 탭 시 네비게이션 pop
+                alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
+                    owner.navigationController?.popViewController(animated: true)
+                })
                 owner.present(alert, animated: true)
             }
             .disposed(by: disposeBag)
