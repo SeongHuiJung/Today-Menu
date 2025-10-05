@@ -2,7 +2,7 @@
 //  ImageStorageManager.swift
 //  TodayMenu
 //
-//  Created by Claude on 10/3/25.
+//  Created by 정성희 on 10/3/25.
 //
 
 import UIKit

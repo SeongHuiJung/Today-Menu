@@ -2,7 +2,7 @@
 //  CalendarEmptyCell.swift
 //  TodayMenu
 //
-//  Created by Claude on 9/30/25.
+//  Created by 정성희 on 9/30/25.
 //
 
 import UIKit

@@ -2,7 +2,7 @@
 //  FoodRecommendService.swift
 //  TodayMenu
 //
-//  Created by Claude on 10/4/25.
+//  Created by 정성희 on 10/4/25.
 //
 
 import Foundation
