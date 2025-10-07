@@ -32,7 +32,14 @@ final class MakeFoodReviewViewController: BaseViewController {
         self.menuSelectedTime = menuSelectedTime
         super.init(nibName: nil, bundle: nil)
     }
-    
+
+    // Calendar에서 온 경우
+    init(viewModel: MakeFoodReviewViewModel, selectedDate: Date) {
+        self.viewModel = viewModel
+        self.menuSelectedTime = selectedDate
+        super.init(nibName: nil, bundle: nil)
+    }
+
     override func loadView() {
         view = mainView
     }
@@ -42,6 +49,7 @@ final class MakeFoodReviewViewController: BaseViewController {
         setupNavigationBar()
         setupRestaurantSearchButton()
         setupRemoveRestaurantButton()
+        setupCategorySettingButton()
         bind()
     }
     
@@ -82,6 +90,19 @@ extension MakeFoodReviewViewController {
                 owner.mainView.hideSelectedRestaurant()
             }
             .disposed(by: disposeBag)
+    }
+
+    private func setupCategorySettingButton() {
+        mainView.categorySettingButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.presentCategorySelection()
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func presentCategorySelection() {
+        let categoryVC = CategorySelectionViewController()
+        navigationController?.pushViewController(categoryVC, animated: true)
     }
     
     private func presentRestaurantSearch() {
@@ -162,6 +183,11 @@ extension MakeFoodReviewViewController {
                 self?.mainView.populateInitialData(foodName: food.title, storeName: "")
             })
             .disposed(by: disposeBag)
+
+        // Calendar에서 온 경우 음식 분류 설정 버튼 표시
+        if output.isFromCalendar {
+            mainView.showCategorySettingButton()
+        }
         
         output.initialEatTime
             .drive(with: self) { owner, date in

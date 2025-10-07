@@ -49,6 +49,7 @@ final class MakeFoodReviewViewModel {
         let popView: Signal<Void>
         let selectedPhotos: Driver<[UIImage]>
         let photoCount: Driver<String>
+        let isFromCalendar: Bool
     }
     
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
@@ -60,13 +61,26 @@ final class MakeFoodReviewViewModel {
     private let storeNameRelay = BehaviorRelay<String>(value: "")
     private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
     private let selectedPhotosRelay = BehaviorRelay<[UIImage]>(value: [])
-    
+
+    private let isFromCalendar: Bool
+
+    // 추천에서 온 경우
     init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
         self.menuSelectedTime = menuSelectedTime
-        
+        self.isFromCalendar = false
+
         let initialEatTime = calculateInitialEatTime()
         self.eatTimeRelay.accept(initialEatTime)
+    }
+
+    // Calendar에서 온 경우
+    init(selectedDate: Date) {
+        self.selectedFood = FoodRecommendation(emoji: nil, title: "", cuisine: "", category: "", recommendHistoryId: nil)
+        self.menuSelectedTime = selectedDate
+        self.isFromCalendar = true
+
+        self.eatTimeRelay.accept(selectedDate)
     }
     
     func transform(_ input: Input) -> Output {
@@ -251,7 +265,8 @@ final class MakeFoodReviewViewModel {
             showError: allErrors,
             popView: popView.asSignal(onErrorSignalWith: .empty()),
             selectedPhotos: selectedPhotosRelay.asDriver(),
-            photoCount: photoCount
+            photoCount: photoCount,
+            isFromCalendar: isFromCalendar
         )
     }
 }

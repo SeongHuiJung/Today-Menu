@@ -431,7 +431,19 @@ extension CalendarViewController: FSCalendarDataSource {
 extension CalendarViewController: FSCalendarDelegate {
     
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
-        dateSelectedSubject.onNext(date)
+        let reviews = getReviews(for: date)
+
+        // empty cell인 경우 리뷰 작성 화면으로 이동
+        if reviews.isEmpty {
+            let viewModel = MakeFoodReviewViewModel(selectedDate: date)
+            let vc = MakeFoodReviewViewController(viewModel: viewModel, selectedDate: date)
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        
+        // 리뷰가 있는 경우 리뷰 리스트 보여줌
+        else {
+            dateSelectedSubject.onNext(date)
+        }
     }
     
     func calendar(_ calendar: FSCalendar, boundingRectWillChange bounds: CGRect, animated: Bool) {
