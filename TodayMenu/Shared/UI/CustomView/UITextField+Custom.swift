@@ -28,7 +28,7 @@ class BasicTextField: UITextField {
 
         self.layer.cornerRadius = 8
         self.layer.borderWidth = 1
-        self.layer.borderColor = UIColor.textFieldBorder.cgColor
+        self.layer.borderColor = UIColor.customGray2.cgColor
         
         self.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         self.leftViewMode = .always

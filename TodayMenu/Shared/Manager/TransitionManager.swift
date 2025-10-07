@@ -16,10 +16,10 @@ class TransitionManager {
         
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = .customBackground
+        tabBarAppearance.backgroundColor = .customWhite
         tabBarAppearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
-        tabBarAppearance.stackedLayoutAppearance.normal.iconColor = .customGray
-        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.customGray]
+        tabBarAppearance.stackedLayoutAppearance.normal.iconColor = .customGray3
+        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.customGray3]
         tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
         
         UITabBar.appearance().standardAppearance = tabBarAppearance
@@ -29,9 +29,9 @@ class TransitionManager {
         let page2 = UINavigationController(rootViewController: FoodMapViewController())
         let page3 = UINavigationController(rootViewController: CalendarViewController())
 
-        page1.view.backgroundColor = .customBackground
-        page2.view.backgroundColor = .customBackground
-        page3.view.backgroundColor = .customBackground
+        page1.view.backgroundColor = .customWhite
+        page2.view.backgroundColor = .customWhite
+        page3.view.backgroundColor = .customWhite
         
         tabBarController.setViewControllers([page1, page2, page3], animated: true)
         

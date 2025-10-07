@@ -106,7 +106,7 @@ final class CalendarViewController: BaseViewController {
     
     private let reviewTableView: UITableView = {
         let tableView = UITableView()
-        tableView.backgroundColor = .backgroundGray
+        tableView.backgroundColor = .customGray0
         tableView.separatorStyle = .none
         tableView.alpha = 0
         return tableView
@@ -117,7 +117,7 @@ final class CalendarViewController: BaseViewController {
         button.setTitle("달력 전체보기", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
-        button.backgroundColor = .point
+        button.backgroundColor = .point2
         button.layer.cornerRadius = 18
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -221,7 +221,7 @@ final class CalendarViewController: BaseViewController {
     
     override func configureView() {
         super.configureView()
-        view.backgroundColor = .backgroundGray
+        view.backgroundColor = .customGray0
     }
 }
 

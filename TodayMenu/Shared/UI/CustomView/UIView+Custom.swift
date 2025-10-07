@@ -34,7 +34,7 @@ class CornerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    let label = BasicLabel(text: "", alignment: .center, size: FontSize.small, textColor: .point)
+    let label = BasicLabel(text: "", alignment: .center, size: FontSize.small, textColor: .point2)
     
     init() {
         super.init(frame: .zero)
@@ -47,7 +47,7 @@ class CornerView: UIView {
         
         self.backgroundColor = .clear
         self.layer.cornerRadius = 5
-        self.layer.borderColor = UIColor.point.cgColor
+        self.layer.borderColor = UIColor.point2.cgColor
         self.layer.borderWidth = 1
         self.clipsToBounds = true
     }

@@ -17,13 +17,13 @@ class BaseViewController: UIViewController {
     }
     
     func configureView() {
-        view.backgroundColor = .customBackground
+        view.backgroundColor = .customWhite
         
         navigationItem.backButtonTitle = ""
         
         let navigationBarAppearance = UINavigationBarAppearance()
         navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = .customBackground
+        navigationBarAppearance.backgroundColor = .customWhite
         navigationBarAppearance.titleTextAttributes = [.foregroundColor: UIColor.fontBlack]
         
         navigationController?.navigationBar.standardAppearance = navigationBarAppearance

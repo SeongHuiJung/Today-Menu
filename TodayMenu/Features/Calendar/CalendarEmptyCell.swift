@@ -64,8 +64,8 @@ final class CalendarEmptyCell: FSCalendarCell {
         
         if isFuture {
             // 미래 날짜는 회색 처리
-            dateLabel.textColor = .lightGray
-            backgroundColorView.backgroundColor = UIColor.systemGray6
+            dateLabel.textColor = .fontLightGray
+            backgroundColorView.backgroundColor = .customGray1
         } else {
             dateLabel.textColor = isWeekend ? .systemRed : .black
             backgroundColorView.backgroundColor = .white

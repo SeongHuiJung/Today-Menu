@@ -23,19 +23,19 @@ final class FoodRecommendView: BaseView {
     
     // 추천 버튼 (초기 상태)
     let recommendButton = {
-        let button = BarButton(title: "음식 추천받기", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point)
+        let button = BarButton(title: "음식 추천받기", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point2)
         return button
     }()
     
-    let passButton = BarButton(title: "다시뽑기", size: FontSize.subTitle, textColor: .fontLightGray, backgroundColor: .customLightGray)
-    let acceptButton = BarButton(title: "메뉴선택", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point)
+    let passButton = BarButton(title: "다시뽑기", size: FontSize.subTitle, textColor: .fontLightGray, backgroundColor: .customGray1)
+    let acceptButton = BarButton(title: "메뉴선택", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point2)
     let reviewButton = {
-        let button = BarButton(title: "리뷰작성", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point)
+        let button = BarButton(title: "리뷰작성", size: FontSize.subTitle, textColor: .fontWhite, backgroundColor: .point2)
         button.isHidden = true
         return button
     }()
     let reDrawButton = {
-        let button = BarButton(title: "다시뽑기", size: FontSize.regular, textColor: .fontLightGray, backgroundColor: .customLightGray)
+        let button = BarButton(title: "다시뽑기", size: FontSize.regular, textColor: .fontLightGray, backgroundColor: .customGray1)
         button.isHidden = true
         return button
     }()
