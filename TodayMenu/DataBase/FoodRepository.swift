@@ -86,14 +86,21 @@ extension FoodRepository {
     func createFoodReview(name: String, cuisine: String, category: String) -> FoodReview {
         // FoodType 찾거나 생성
         let foodType = getOrCreateFoodType(cuisine: cuisine, category: category)
-        
+
         // FoodReview 생성
         let foodReview = FoodReview(
             name: name,
             foodId: foodType.foodId
         )
-        
+
         return foodReview
+    }
+
+    /// 음식 이름으로 FoodReview 찾기
+    func getFoodReviewByName(_ name: String) -> FoodReview? {
+        return realm.objects(FoodReview.self)
+            .filter("name == %@", name)
+            .first
     }
 }
 

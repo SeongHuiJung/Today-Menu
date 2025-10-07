@@ -242,3 +242,81 @@ extension FoodRecommendService {
         return adjustedScored.last?.foodType
     }
 }
+
+// MARK: - 디버깅 및 테스트용 메서드
+extension FoodRecommendService {
+
+    /// 모든 음식의 점수 상세 정보 출력
+    func printScoreDetails() {
+        let allFoodTypes = Array(realm.objects(FoodType.self))
+
+        print("\n========== 추천 점수 상세 분석 ==========")
+        print("총 음식 개수: \(allFoodTypes.count)\n")
+
+        for foodType in allFoodTypes.sorted(by: { $0.category < $1.category }) {
+            let acceptSkipScore = getAcceptSkipScore(for: foodType)
+            let ratingScore = getAverageRatingScore(for: foodType)
+            let recentScore = getRecentEatingScore(for: foodType)
+            let totalScore = 100 + acceptSkipScore + ratingScore + recentScore
+            let finalScore = max(totalScore, 10)
+
+            print("   \(foodType.category) (foodId: \(foodType.foodId))")
+            print("   - Accept/Skip: \(acceptSkipScore >= 0 ? "+" : "")\(acceptSkipScore)점")
+            print("   - 평균 평점: \(ratingScore >= 0 ? "+" : "")\(ratingScore)점")
+            print("   - 최근 섭취: \(recentScore >= 0 ? "+" : "")\(recentScore)점")
+            print("   - 최종 점수: \(finalScore)점\n")
+        }
+
+        print("==========================================\n")
+    }
+
+    /// 특정 음식의 점수 상세 정보 출력
+    func printScoreDetails(for foodType: FoodType) {
+        let acceptSkipScore = getAcceptSkipScore(for: foodType)
+        let ratingScore = getAverageRatingScore(for: foodType)
+        let recentScore = getRecentEatingScore(for: foodType)
+        let totalScore = 100 + acceptSkipScore + ratingScore + recentScore
+        let finalScore = max(totalScore, 10)
+
+        // Accept/Skip 상세
+        let histories = realm.objects(RecommendHistory.self).filter("foodId == %@", foodType.foodId)
+        let acceptCount = histories.filter("isAccepted == true").count
+        let skipCount = histories.filter("isAccepted == false").count
+
+        // 평점 상세
+        let foodReviews = realm.objects(FoodReview.self).filter("foodId == %@", foodType.foodId)
+        var allReviews: [Review] = []
+        for foodReview in foodReviews {
+            allReviews.append(contentsOf: Array(foodReview.review))
+        }
+        let avgRating = allReviews.isEmpty ? 0.0 : allReviews.map(\.rating).reduce(0, +) / Double(allReviews.count)
+
+        // 최근 섭취일 상세
+        var allDates: [Date] = []
+        for foodReview in foodReviews {
+            let reviews = Array(foodReview.review)
+            allDates.append(contentsOf: reviews.map { $0.ateAt })
+        }
+        let daysSince = allDates.max().map { Calendar.current.dateComponents([.day], from: $0, to: Date()).day ?? 0 } ?? -1
+
+        print("\n========== \(foodType.category) 점수 상세 ==========")
+        print(" FoodId: \(foodType.foodId)")
+        print(" Accept/Skip 이력: \(acceptSkipScore >= 0 ? "+" : "")\(acceptSkipScore)점")
+        print("   - Accept: \(acceptCount)회 (+\(acceptCount * 10)점)")
+        print("   - Skip: \(skipCount)회 (\(skipCount * -15)점)")
+
+        print(" 평균 평점: \(ratingScore >= 0 ? "+" : "")\(ratingScore)점")
+        print("   - 총 리뷰: \(allReviews.count)개")
+        print("   - 평균 평점: \(String(format: "%.1f", avgRating))")
+
+        print(" 최근 섭취일: \(recentScore >= 0 ? "+" : "")\(recentScore)점")
+        if daysSince >= 0 {
+            print("   - 마지막 섭취: \(daysSince)일 전")
+        } else {
+            print("   - 마지막 섭취: 없음")
+        }
+
+        print(" 최종 점수: \(finalScore)점 (기본 100 + \(acceptSkipScore) + \(ratingScore) + \(recentScore))")
+        print("==========================================\n")
+    }
+}

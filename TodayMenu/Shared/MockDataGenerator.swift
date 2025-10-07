@@ -97,8 +97,6 @@ final class MockDataGenerator {
                     }
                 })
         }
-        
-        let allFoodTypes = foodRepository.getAllCategories()
     }
     
     static func clearAllData() {
@@ -125,5 +123,150 @@ final class MockDataGenerator {
         } catch {
             print("RecommendHistory 삭제 실패: \(error)")
         }
+    }
+
+    // MARK: - 추천 알고리즘 테스트용 메서드
+
+    /// 특정 음식에 Accept 이력 추가
+    static func addAcceptHistory(foodId: String, count: Int) {
+        do {
+            let realm = try Realm()
+            try realm.write {
+                for _ in 0..<count {
+                    let history = RecommendHistory(foodId: foodId, isAccepted: true)
+                    realm.add(history)
+                }
+            }
+            print("Accept 이력 추가: \(foodId) x\(count)")
+        } catch {
+            print("Accept 이력 추가 실패: \(error)")
+        }
+    }
+
+    /// 특정 음식에 Skip 이력 추가
+    static func addSkipHistory(foodId: String, count: Int) {
+        do {
+            let realm = try Realm()
+            try realm.write {
+                for _ in 0..<count {
+                    let history = RecommendHistory(foodId: foodId, isAccepted: false)
+                    realm.add(history)
+                }
+            }
+            print("Skip 이력 추가: \(foodId) x\(count)")
+        } catch {
+            print("Skip 이력 추가 실패: \(error)")
+        }
+    }
+
+    /// 특정 음식의 최근 섭취일 조정 (daysAgo: 며칠 전)
+    static func setLastEatingDate(foodName: String, daysAgo: Int) {
+        let foodRepository = FoodRepository()
+        let reviewRepository = ReviewRepository()
+
+        // FoodReview 찾기
+        guard let foodReview = foodRepository.getFoodReviewByName(foodName) else {
+            print("음식을 찾을 수 없음: \(foodName)")
+            return
+        }
+
+        // FoodType 찾기
+        guard let foodType = foodRepository.getFoodType(by: foodReview.foodId) else {
+            print("FoodType을 찾을 수 없음: foodId=\(foodReview.foodId)")
+            return
+        }
+
+        let targetDate = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
+
+        // 해당 음식의 리뷰 추가
+        let restaurant = Restaurant(
+            name: "테스트 식당",
+            latitude: 37.5665,
+            longitude: 126.9780,
+            cuisine: foodType.cuisine,
+            restaurantId: "test_\(UUID().uuidString)"
+        )
+
+        let companion = Companion(type: .alone, name: nil)
+
+        let review = Review(
+            food: [foodReview],
+            restaurant: restaurant,
+            rating: 3.0,
+            comment: "테스트용 리뷰",
+            companion: [companion],
+            photos: [],
+            ateAt: targetDate,
+            averagePrice: nil,
+            emoji: nil
+        )
+
+        _ = reviewRepository.saveReview(review)
+            .subscribe(onNext: { result in
+                switch result {
+                case .success:
+                    print("최근 섭취일 설정: \(foodName) - \(daysAgo)일 전")
+                case .failure(let error):
+                    print("최근 섭취일 설정 실패: \(error)")
+                }
+            })
+    }
+
+    /// 특정 음식에 평점 리뷰 추가
+    static func addRatingReview(foodName: String, rating: Double, count: Int) {
+        let foodRepository = FoodRepository()
+        let reviewRepository = ReviewRepository()
+
+        guard let foodReview = foodRepository.getFoodReviewByName(foodName) else {
+            print("음식을 찾을 수 없음: \(foodName)")
+            return
+        }
+
+        // FoodType 찾기 (foodId로)
+        guard let foodType = foodRepository.getFoodType(by: foodReview.foodId) else {
+            print("FoodType을 찾을 수 없음: foodId=\(foodReview.foodId)")
+            return
+        }
+
+        for i in 0..<count {
+            let restaurant = Restaurant(
+                name: "테스트 식당 \(i+1)",
+                latitude: 37.5665,
+                longitude: 126.9780,
+                cuisine: foodType.cuisine,
+                restaurantId: "test_rating_\(UUID().uuidString)"
+            )
+
+            let companion = Companion(type: .alone, name: nil)
+            let date = Calendar.current.date(byAdding: .day, value: -(30 + i), to: Date())!
+
+            let review = Review(
+                food: [foodReview],
+                restaurant: restaurant,
+                rating: rating,
+                comment: "평점 테스트용 리뷰",
+                companion: [companion],
+                photos: [],
+                ateAt: date,
+                averagePrice: nil,
+                emoji: nil
+            )
+
+            _ = reviewRepository.saveReview(review)
+                .subscribe(onNext: { result in
+                    switch result {
+                    case .success:
+                        print("평점 리뷰 추가: \(foodName) - \(rating)")
+                    case .failure(let error):
+                        print("평점 리뷰 추가 실패: \(error)")
+                    }
+                })
+        }
+    }
+
+    /// 추천 점수 상세 출력
+    static func printRecommendScoreDetails() {
+        let service = FoodRecommendService()
+        service.printScoreDetails()
     }
 }
