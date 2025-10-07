@@ -10,7 +10,7 @@ import Photos
 import RxSwift
 import RxCocoa
 
-final class CustomPhotoGalleryViewController: UIViewController {
+final class CustomPhotoGalleryViewController: BaseViewController {
     
     private let disposeBag = DisposeBag()
     private var allPhotos: PHFetchResult<PHAsset>?
@@ -64,19 +64,37 @@ final class CustomPhotoGalleryViewController: UIViewController {
         return button
     }()
     
+    private let limitedAccessBanner: UIView = {
+        let view = UIView()
+        view.backgroundColor = .backgroundGray
+        view.isHidden = true
+        return view
+    }()
+    
+    private let bannerLabel: UILabel = {
+        let label = UILabel()
+        label.text = "모든 사진 접근 권한을 허용하면 더 편하게 사진을 올릴 수 있어요."
+        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.textColor = .darkGray
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let settingButton = RadiusButton(title: "사진 접근 권한 허용하기", size: 13, textColor: .point, backgroundColor: .customLightGray, cornerRadius: 15)
+    
     init(existingPhotoCount: Int) {
         self.existingCount = existingPhotoCount
         super.init(nibName: nil, bundle: nil)
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupBindings()
+        bind()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         checkPhotoLibraryPermission()
     }
     
@@ -84,11 +102,15 @@ final class CustomPhotoGalleryViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(topBar)
+        view.addSubview(limitedAccessBanner)
         view.addSubview(collectionView)
         
         topBar.addSubview(closeButton)
         topBar.addSubview(titleLabel)
         topBar.addSubview(addButton)
+        
+        limitedAccessBanner.addSubview(bannerLabel)
+        limitedAccessBanner.addSubview(settingButton)
         
         topBar.snp.makeConstraints {
             $0.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
@@ -110,8 +132,25 @@ final class CustomPhotoGalleryViewController: UIViewController {
             $0.centerY.equalToSuperview()
         }
         
-        collectionView.snp.makeConstraints {
+        limitedAccessBanner.snp.makeConstraints {
             $0.top.equalTo(topBar.snp.bottom)
+            $0.horizontalEdges.equalToSuperview()
+            $0.height.equalTo(0)  // 초기에는 숨김
+        }
+        
+        bannerLabel.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(12)
+            $0.centerX.equalToSuperview()
+        }
+        
+        settingButton.snp.makeConstraints {
+            $0.top.equalTo(bannerLabel.snp.bottom).offset(5)
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalToSuperview().inset(10)
+        }
+        
+        collectionView.snp.makeConstraints {
+            $0.top.equalTo(limitedAccessBanner.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
         }
         
@@ -119,7 +158,7 @@ final class CustomPhotoGalleryViewController: UIViewController {
         collectionView.delegate = self
     }
     
-    private func setupBindings() {
+    private func bind() {
         closeButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.dismiss(animated: true)
@@ -140,29 +179,55 @@ final class CustomPhotoGalleryViewController: UIViewController {
                 self?.addButton.setTitle(text.isEmpty ? "추가" : text, for: .normal)
             })
             .disposed(by: disposeBag)
+        
+        // 설정 버튼 탭
+        settingButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func showPhotoPermissionAlert() {
+        
+        let alert = UIAlertController(
+            title: "접근 권한 안내",
+            message: "사진을 선택하기 위해 설정에서 갤러리 접근 권한을 허용해 주세요.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel) { [weak self] _ in
+            self?.dismiss(animated: true)
+        })
+        
+        alert.addAction(UIAlertAction(title: "설정", style: .default) { [weak self] _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+            self?.dismiss(animated: true)
+        })
+        
+        present(alert, animated: true)
     }
     
-    private func checkPhotoLibraryPermission() {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    private func showCameraPermissionAlert() {
+        let alert = UIAlertController(
+            title: "접근 권한 안내",
+            message: "카메라를 사용하기 위해 설정에서 카메라 접근 권한을 허용해 주세요.",
+            preferredStyle: .alert
+        )
         
-        switch status {
-        case .authorized, .limited:
-            loadPhotos()
-            
-        case .notDetermined:
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
-                DispatchQueue.main.async {
-                    if status == .authorized || status == .limited {
-                        self?.loadPhotos()
-                    } else {
-                        self?.dismiss(animated: true)
-                    }
-                }
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        
+        alert.addAction(UIAlertAction(title: "설정", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
             }
-            
-        default:
-            dismiss(animated: true)
-        }
+        })
+        
+        present(alert, animated: true)
     }
     
     private func loadPhotos() {
@@ -257,7 +322,7 @@ extension CustomPhotoGalleryViewController: UICollectionViewDelegate {
             } else {
                 // 최대 개수 초과
                 let alert = UIAlertController(
-                    title: "알림",
+                    title: "안내",
                     message: "사진은 최대 \(maxSelection)장까지 선택할 수 있습니다.",
                     preferredStyle: .alert
                 )
@@ -283,18 +348,17 @@ extension CustomPhotoGalleryViewController: UICollectionViewDelegate {
                 DispatchQueue.main.async {
                     if granted {
                         self?.showCamera()
+                    } else {
+                        self?.showCameraPermissionAlert()
                     }
                 }
             }
             
-        default:
-            let alert = UIAlertController(
-                title: "카메라 권한 필요",
-                message: "카메라 사용을 위해 권한이 필요합니다.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "확인", style: .default))
-            present(alert, animated: true)
+        case .denied, .restricted:
+            showCameraPermissionAlert()
+            
+        @unknown default:
+            showCameraPermissionAlert()
         }
     }
     
@@ -341,5 +405,64 @@ extension CustomPhotoGalleryViewController: UIImagePickerControllerDelegate, UIN
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true)
+    }
+    
+    private func checkPhotoLibraryPermission() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        
+        switch status {
+        case .authorized:
+            loadPhotos()
+            hideLimitedAccessBanner()
+            
+        case .limited:
+            loadPhotos()
+            showLimitedAccessBanner()
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
+                DispatchQueue.main.async {
+                    if status == .authorized {
+                        self?.loadPhotos()
+                        self?.hideLimitedAccessBanner()
+                    } else if status == .limited {
+                        self?.loadPhotos()
+                        self?.showLimitedAccessBanner()
+                    } else {
+                        self?.showPhotoPermissionAlert()
+                    }
+                }
+            }
+            
+        case .denied, .restricted:
+            showPhotoPermissionAlert()
+            
+        @unknown default:
+            showPhotoPermissionAlert()
+        }
+    }
+    
+    private func showLimitedAccessBanner() {
+        limitedAccessBanner.isHidden = false
+        
+        limitedAccessBanner.snp.updateConstraints {
+            $0.height.equalTo(80)
+        }
+        
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    private func hideLimitedAccessBanner() {
+        limitedAccessBanner.snp.updateConstraints {
+            $0.height.equalTo(0)
+        }
+        
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        } completion: { _ in
+            self.limitedAccessBanner.isHidden = true
+        }
     }
 }

@@ -190,7 +190,7 @@ enum LocationError {
         case .locationServiceDisabled:
             return "기기의 위치 권한이 꺼져 있어 위치 권한을 요청할 수 없습니다. \n[설정 > 개인정보 보호 및 보안 > 위치 서비스] 에서 위치 서비스를 허용해 주세요."
         case .authorizationDenied:
-            return "위치 정보를 얻을 수 없습니다. 'TodayMenu' 앱의 위치 권한을 허용해 주세요."
+            return "위치 정보를 얻을 수 없습니다. '모모찌' 앱의 위치 권한을 허용해 주세요."
         case .updateFailed(let errorMessage):
             return "위치 업데이트 실패: \(errorMessage)"
         case .unknown:

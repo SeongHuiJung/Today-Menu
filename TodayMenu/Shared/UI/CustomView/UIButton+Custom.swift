@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 
 class LabelButton: UIButton {
     override init(frame: CGRect) {
@@ -39,6 +40,32 @@ class BarButton: UIButton {
         self.setTitle(title, for: .normal)
         self.titleLabel?.font = UIFont.systemFont(ofSize: size, weight: .semibold)
         self.setTitleColor(textColor, for: .normal)
+        self.backgroundColor = backgroundColor
+        self.layer.cornerRadius = cornerRadius
+        self.clipsToBounds = true
+    }
+}
+
+class RadiusButton: UIButton {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    init(title: String, size: CGFloat, textColor: UIColor, backgroundColor: UIColor, cornerRadius: CGFloat = 8) {
+        super.init(frame: .zero)
+        
+        let title = BasicLabel(text: title, alignment: .center, size: size, weight: .semibold, textColor: textColor)
+
+        self.addSubview(title)
+        title.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(4)
+            $0.horizontalEdges.equalToSuperview().inset(12)
+        }
+        
         self.backgroundColor = backgroundColor
         self.layer.cornerRadius = cornerRadius
         self.clipsToBounds = true
