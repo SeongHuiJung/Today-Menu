@@ -352,6 +352,24 @@ extension MakeFoodReviewViewModel {
                             try realm.write {
                                 review.photos.append(objectsIn: photoFileNames)
                             }
+
+                            // RecommendHistory의 reviewId 업데이트 (있는 경우만)
+                            if let recommendHistoryId = self.selectedFood.recommendHistoryId {
+                                self.reviewRepository.updateRecommendHistoryReviewId(
+                                    recommendHistoryId: recommendHistoryId,
+                                    reviewId: review.id
+                                )
+                                .subscribe(onNext: { result in
+                                    switch result {
+                                    case .success:
+                                        print("RecommendHistory와 Review 연결 완료")
+                                    case .failure(let error):
+                                        print("RecommendHistory 업데이트 실패: \(error)")
+                                    }
+                                })
+                                .disposed(by: self.disposeBag)
+                            }
+
                             observer.onNext(.success("리뷰가 저장되었습니다!"))
                         } catch {
                             observer.onNext(.failure(ReviewError.saveFailed("사진 저장 중 오류가 발생했습니다")))

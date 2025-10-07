@@ -76,6 +76,7 @@ class RecommendHistory: Object {
     @Persisted var foodId: String // 음식 고유번호 (FoodType의 foodId)
     @Persisted var isAccepted: Bool // 추천됐을때 accept 여부
     @Persisted var createdAt: Date // 생성 시각
+    @Persisted var reviewId: String? // 작성된 Review 테이블의 id pk
     
     convenience init(foodId: String, isAccepted: Bool) {
         self.init()
@@ -83,6 +84,7 @@ class RecommendHistory: Object {
         self.foodId = foodId
         self.isAccepted = isAccepted
         self.createdAt = Date()
+        self.reviewId = nil
     }
 }
 

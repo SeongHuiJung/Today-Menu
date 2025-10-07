@@ -70,28 +70,28 @@ extension FoodRecommendService {
         }
     }
     
-    /// 추천 이력 저장 (accept/skip)
-    func saveRecommendHistory(foodId: String, isAccepted: Bool) -> Observable<Result<Void, Error>> {
+    /// 추천 이력 저장 (accept/skip) - RecommendHistory id 반환
+    func saveRecommendHistory(foodId: String, isAccepted: Bool) -> Observable<Result<ObjectId, Error>> {
         return Observable.create { [weak self] observer in
             guard let self else {
                 observer.onNext(.failure(NSError(domain: "FoodRecommendService", code: -1)))
                 observer.onCompleted()
                 return Disposables.create()
             }
-            
+
             do {
+                let history = RecommendHistory(foodId: foodId, isAccepted: isAccepted)
                 try self.realm.write {
-                    let history = RecommendHistory(foodId: foodId, isAccepted: isAccepted)
                     self.realm.add(history)
                 }
-                print("RecommendHistory 저장: \(isAccepted ? "Accept" : "Skip")")
-                observer.onNext(.success(()))
+                print("RecommendHistory 저장: \(isAccepted ? "Accept" : "Skip") (id: \(history.id))")
+                observer.onNext(.success(history.id))
                 observer.onCompleted()
             } catch {
                 observer.onNext(.failure(error))
                 observer.onCompleted()
             }
-            
+
             return Disposables.create()
         }
     }

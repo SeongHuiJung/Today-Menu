@@ -8,6 +8,7 @@
 import Foundation
 import RxSwift
 import RxCocoa
+import RealmSwift
 
 final class FoodRecommendViewModel {
     struct Input {
@@ -32,6 +33,7 @@ final class FoodRecommendViewModel {
     private let accepted = BehaviorRelay<Bool>(value: false)
     private let routeRelay = PublishRelay<FoodRecommendation>()
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+    private let recommendHistoryId = BehaviorRelay<ObjectId?>(value: nil)
     
     init(provider: RecommendationProvider = RealmRecommendationProvider()) {
         self.provider = provider
@@ -90,26 +92,47 @@ final class FoodRecommendViewModel {
         input.acceptTap
             .withLatestFrom(currentRecommendation)
             .compactMap { $0 }
-            .flatMapLatest { [recommendService, foodRepository] item -> Observable<Void> in
+            .flatMapLatest { [weak self, recommendService, foodRepository] item -> Observable<ObjectId?> in
+                guard let self = self else { return .just(nil) }
+
                 // category로 foodId 가져오기
                 guard let foodId = foodRepository.getFoodId(for: item.category) else {
                     print("foodId를 찾을 수 없음: \(item.category)")
-                    return .just(())
+                    return .just(nil)
                 }
-                
+
                 print("Accept 이력 저장: \(item.category) (foodId: \(foodId))")
-                
+
                 return recommendService.saveRecommendHistory(foodId: foodId, isAccepted: true)
-                    .map { _ in () }
+                    .map { result -> ObjectId? in
+                        switch result {
+                        case .success(let historyId):
+                            return historyId
+                        case .failure:
+                            return nil
+                        }
+                    }
             }
-            .map { true }
+            .do(onNext: { [weak self] historyId in
+                self?.recommendHistoryId.accept(historyId)
+            })
+            .map { $0 != nil }
             .bind(to: accepted)
             .disposed(by: bag)
         
-        // 리뷰 버튼 → 라우팅 신호 방출
+        // 리뷰 버튼 → 라우팅 신호 방출 (RecommendHistory id 포함)
         input.reviewTap
-            .withLatestFrom(currentRecommendation)
-            .compactMap { $0 }
+            .withLatestFrom(Observable.combineLatest(currentRecommendation, recommendHistoryId))
+            .compactMap { recommendation, historyId -> FoodRecommendation? in
+                guard let recommendation = recommendation else { return nil }
+                return FoodRecommendation(
+                    emoji: recommendation.emoji,
+                    title: recommendation.title,
+                    cuisine: recommendation.cuisine,
+                    category: recommendation.category,
+                    recommendHistoryId: historyId
+                )
+            }
             .bind(to: routeRelay)
             .disposed(by: bag)
         

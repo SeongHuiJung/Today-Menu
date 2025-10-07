@@ -14,6 +14,7 @@ struct FoodRecommendation: Equatable {
     let title: String
     let cuisine: String
     let category: String
+    let recommendHistoryId: ObjectId? // Accept 시 생성된 RecommendHistory의 id
 }
 
 protocol RecommendationProvider {
@@ -22,7 +23,7 @@ protocol RecommendationProvider {
 
 final class RealmRecommendationProvider: RecommendationProvider {
     private let service = FoodRecommendService()
-    
+
     func getRecommendation() -> Observable<FoodRecommendation?> {
         return service.getRecommendedFood()
             .map { foodType -> FoodRecommendation? in
@@ -31,20 +32,9 @@ final class RealmRecommendationProvider: RecommendationProvider {
                     emoji: nil,
                     title: foodType.category,
                     cuisine: foodType.cuisine,
-                    category: foodType.category
+                    category: foodType.category,
+                    recommendHistoryId: nil
                 )
             }
     }
 }
-
-//final class MockRecommendationProvider: RecommendationProvider {
-//    func getRecommendation() -> Observable<FoodRecommendation?> {
-//        let mock = FoodRecommendation(
-//            emoji: "🍖",
-//            title: "매운돈까스",
-//            cuisine: Cuisine.korean.rawValue,
-//            category: "돈까스"
-//        )
-//        return Observable.just(mock)
-//    }
-//}
