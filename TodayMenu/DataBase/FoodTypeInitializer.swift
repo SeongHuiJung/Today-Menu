@@ -105,15 +105,12 @@ extension FoodTypeInitializer {
             // 태국식
             (Cuisine.thai.rawValue, "팟타이")
         ]
-        
-        var createdCount = 0
-        
+
         for (cuisine, category) in initialFoodTypes {
-            let foodType = foodRepository.getOrCreateFoodType(
+            let _ = foodRepository.getOrCreateFoodType(
                 cuisine: cuisine,
                 category: category
             )
-            createdCount += 1
         }
     }
 }

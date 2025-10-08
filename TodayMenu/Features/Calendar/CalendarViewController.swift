@@ -437,6 +437,7 @@ extension CalendarViewController: FSCalendarDelegate {
         if reviews.isEmpty {
             let viewModel = MakeFoodReviewViewModel(selectedDate: date)
             let vc = MakeFoodReviewViewController(viewModel: viewModel, selectedDate: date)
+            vc.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(vc, animated: true)
         }
         
