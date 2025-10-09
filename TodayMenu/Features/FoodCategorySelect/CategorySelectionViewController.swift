@@ -20,6 +20,7 @@ final class CategorySelectionViewController: BaseViewController {
     private let scrollSectionSubject = PublishSubject<Int>()
     private var selectedCuisineIndex: Int = 0 // 현재 선택된 대분류 인덱스
     private var isInitialLoad = true // 초기 로드 플래그
+    private var selectedCategoryIndexPath: IndexPath? // 현재 선택된 중분류 인덱스
 
     override func loadView() {
         view = mainView
@@ -58,7 +59,6 @@ final class CategorySelectionViewController: BaseViewController {
     }
 
     private func setupTableView() {
-//        mainView.cuisineTableView.delegate = self
         mainView.cuisineTableView.rowHeight = 60
     }
 
@@ -72,10 +72,12 @@ final class CategorySelectionViewController: BaseViewController {
 extension CategorySelectionViewController {
     private func bind() {
         let cuisineSelectedSubject = PublishSubject<Int>()
+        let categorySelectedSubject = PublishSubject<IndexPath>()
 
         let input = CategorySelectionViewModel.Input(
             cuisineSelected: cuisineSelectedSubject.asObservable(),
-            collectionViewDidScroll: scrollSectionSubject.asObservable()
+            collectionViewDidScroll: scrollSectionSubject.asObservable(),
+            categorySelected: categorySelectedSubject.asObservable()
         )
 
         let output = viewModel.transform(input)
@@ -151,6 +153,34 @@ extension CategorySelectionViewController {
         mainView.cuisineTableView.rx.itemSelected
             .map { $0.row }
             .bind(to: cuisineSelectedSubject)
+            .disposed(by: disposeBag)
+
+        // 중분류 선택 이벤트
+        mainView.categoryCollectionView.rx.itemSelected
+            .do(onNext: { [weak self] indexPath in
+                guard let self = self else { return }
+
+                // 이전 선택 해제
+                if let previousIndexPath = self.selectedCategoryIndexPath {
+                    self.selectedCategoryIndexPath = nil
+                    self.mainView.categoryCollectionView.reloadItems(at: [previousIndexPath])
+                }
+
+                // 새로운 선택 저장
+                self.selectedCategoryIndexPath = indexPath
+                self.mainView.categoryCollectionView.reloadItems(at: [indexPath])
+            })
+            .bind(to: categorySelectedSubject)
+            .disposed(by: disposeBag)
+
+        // 선택된 중분류 처리
+        output.selectedCategory
+            .emit(onNext: { [weak self] category in
+                guard let self = self else { return }
+                print("선택된 음식: \(category)")
+                // TODO: 선택된 카테고리를 이전 화면으로 전달하고 dismiss
+                // self.navigationController?.popViewController(animated: true)
+            })
             .disposed(by: disposeBag)
     }
 }
@@ -252,7 +282,8 @@ extension CategorySelectionViewController: UICollectionViewDataSource {
         }
 
         let category = categorySections[indexPath.section].categories[indexPath.item]
-        cell.configure(title: category)
+        let isSelected = (indexPath == selectedCategoryIndexPath)
+        cell.configure(title: category, isSelected: isSelected)
         return cell
     }
 

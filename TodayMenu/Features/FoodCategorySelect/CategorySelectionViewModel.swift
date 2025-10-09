@@ -14,6 +14,7 @@ final class CategorySelectionViewModel {
     struct Input {
         let cuisineSelected: Observable<Int> // 대분류 테이블뷰 선택
         let collectionViewDidScroll: Observable<Int> // 컬렉션뷰 스크롤로 감지된 섹션
+        let categorySelected: Observable<IndexPath> // 중분류 셀 선택
     }
 
     struct Output {
@@ -21,6 +22,7 @@ final class CategorySelectionViewModel {
         let categories: Driver<[CategorySection]> // 중분류 섹션 목록
         let selectedCuisineIndex: Driver<Int> // 선택된 대분류 인덱스
         let scrollToSection: Signal<Int> // 컬렉션뷰 스크롤할 섹션
+        let selectedCategory: Signal<String> // 선택된 중분류
     }
 
     struct CategorySection {
@@ -66,6 +68,20 @@ final class CategorySelectionViewModel {
             .bind(to: selectedCuisineIndexRelay)
             .disposed(by: disposeBag)
 
+        // 중분류 셀 선택 시 해당 카테고리 이름 반환
+        let selectedCategory = input.categorySelected
+            .map { [weak self] indexPath -> String in
+                guard let self = self,
+                      indexPath.section < self.cuisines.count else {
+                    return ""
+                }
+                let cuisine = self.cuisines[indexPath.section]
+                let categories = self.categoryData[cuisine] ?? []
+                guard indexPath.item < categories.count else { return "" }
+                return categories[indexPath.item]
+            }
+            .asSignal(onErrorSignalWith: .empty())
+
         // 섹션 데이터 생성
         let sections = getCategorySections()
 
@@ -73,7 +89,8 @@ final class CategorySelectionViewModel {
             cuisines: Driver.just(cuisines),
             categories: Driver.just(sections),
             selectedCuisineIndex: selectedCuisineIndexRelay.asDriver(),
-            scrollToSection: scrollToSection
+            scrollToSection: scrollToSection,
+            selectedCategory: selectedCategory
         )
     }
 }

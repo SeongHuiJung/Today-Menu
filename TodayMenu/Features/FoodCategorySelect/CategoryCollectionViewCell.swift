@@ -42,7 +42,21 @@ final class CategoryCollectionViewCell: BaseCollectionViewCell {
         }
     }
 
-    func configure(title: String) {
+    func configure(title: String, isSelected: Bool = false) {
         titleLabel.text = title
+
+        if isSelected {
+            containerView.backgroundColor = UIColor.point2.withAlphaComponent(0.15)
+            containerView.layer.borderColor = UIColor.point2.cgColor
+            containerView.layer.borderWidth = 2
+            titleLabel.textColor = UIColor.point2
+            titleLabel.font = .systemFont(ofSize: FontSize.context, weight: .bold)
+        } else {
+            containerView.backgroundColor = .white
+            containerView.layer.borderColor = UIColor.systemGray4.cgColor
+            containerView.layer.borderWidth = 1
+            titleLabel.textColor = .darkGray
+            titleLabel.font = .systemFont(ofSize: FontSize.context, weight: .medium)
+        }
     }
 }
