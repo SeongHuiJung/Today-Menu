@@ -22,6 +22,9 @@ final class CategorySelectionViewController: BaseViewController {
     private var isInitialLoad = true // 초기 로드 플래그
     private var selectedCategoryIndexPath: IndexPath? // 현재 선택된 중분류 인덱스
 
+    private let selectButton = UIBarButtonItem(title: "선택", style: .plain, target: nil, action: nil)
+    private let selectButtonTapSubject = PublishSubject<Void>()
+
     override func loadView() {
         view = mainView
     }
@@ -56,6 +59,14 @@ final class CategorySelectionViewController: BaseViewController {
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .fontBlack
+
+        // 우측 선택 버튼 추가
+        navigationItem.rightBarButtonItem = selectButton
+
+        // 선택 버튼 Rx 바인딩
+        selectButton.rx.tap
+            .bind(to: selectButtonTapSubject)
+            .disposed(by: disposeBag)
     }
 
     private func setupTableView() {
@@ -77,7 +88,8 @@ extension CategorySelectionViewController {
         let input = CategorySelectionViewModel.Input(
             cuisineSelected: cuisineSelectedSubject.asObservable(),
             collectionViewDidScroll: scrollSectionSubject.asObservable(),
-            categorySelected: categorySelectedSubject.asObservable()
+            categorySelected: categorySelectedSubject.asObservable(),
+            selectButtonTapped: selectButtonTapSubject.asObservable()
         )
 
         let output = viewModel.transform(input)
@@ -157,7 +169,12 @@ extension CategorySelectionViewController {
 
         // 중분류 선택 이벤트
         mainView.categoryCollectionView.rx.itemSelected
-            .do(onNext: { [weak self] indexPath in
+            .bind(to: categorySelectedSubject)
+            .disposed(by: disposeBag)
+
+        // 선택된 중분류 IndexPath 관리 (UI 업데이트용)
+        output.selectedCategoryIndexPath
+            .drive(onNext: { [weak self] newIndexPath in
                 guard let self = self else { return }
 
                 // 이전 선택 해제
@@ -166,15 +183,21 @@ extension CategorySelectionViewController {
                     self.mainView.categoryCollectionView.reloadItems(at: [previousIndexPath])
                 }
 
-                // 새로운 선택 저장
-                self.selectedCategoryIndexPath = indexPath
-                self.mainView.categoryCollectionView.reloadItems(at: [indexPath])
+                // 새로운 선택 저장 및 업데이트
+                if let newIndexPath = newIndexPath {
+                    self.selectedCategoryIndexPath = newIndexPath
+                    self.mainView.categoryCollectionView.reloadItems(at: [newIndexPath])
+                }
             })
-            .bind(to: categorySelectedSubject)
             .disposed(by: disposeBag)
 
-        // 선택된 중분류 처리
-        output.selectedCategory
+        // 선택 버튼 활성화 상태 바인딩
+        output.isSelectButtonEnabled
+            .drive(selectButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+
+        // 선택 완료 시 처리
+        output.dismissWithCategory
             .emit(onNext: { [weak self] category in
                 guard let self = self else { return }
                 print("선택된 음식: \(category)")

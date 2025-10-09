@@ -15,6 +15,7 @@ final class CategorySelectionViewModel {
         let cuisineSelected: Observable<Int> // 대분류 테이블뷰 선택
         let collectionViewDidScroll: Observable<Int> // 컬렉션뷰 스크롤로 감지된 섹션
         let categorySelected: Observable<IndexPath> // 중분류 셀 선택
+        let selectButtonTapped: Observable<Void> // 선택 버튼 탭
     }
 
     struct Output {
@@ -22,7 +23,9 @@ final class CategorySelectionViewModel {
         let categories: Driver<[CategorySection]> // 중분류 섹션 목록
         let selectedCuisineIndex: Driver<Int> // 선택된 대분류 인덱스
         let scrollToSection: Signal<Int> // 컬렉션뷰 스크롤할 섹션
-        let selectedCategory: Signal<String> // 선택된 중분류
+        let selectedCategoryIndexPath: Driver<IndexPath?> // 선택된 중분류 IndexPath
+        let isSelectButtonEnabled: Driver<Bool> // 선택 버튼 활성화 여부
+        let dismissWithCategory: Signal<String> // 카테고리 선택 완료 후 dismiss
     }
 
     struct CategorySection {
@@ -32,6 +35,7 @@ final class CategorySelectionViewModel {
 
     private let disposeBag = DisposeBag()
     private let selectedCuisineIndexRelay = BehaviorRelay<Int>(value: 0)
+    private let selectedCategoryIndexPathRelay = BehaviorRelay<IndexPath?>(value: nil)
 
     // 음식 데이터
     private let cuisines = ["한식", "중식", "일식", "양식", "멕시코식", "베트남식", "태국식"]
@@ -68,16 +72,28 @@ final class CategorySelectionViewModel {
             .bind(to: selectedCuisineIndexRelay)
             .disposed(by: disposeBag)
 
-        // 중분류 셀 선택 시 해당 카테고리 이름 반환
-        let selectedCategory = input.categorySelected
-            .map { [weak self] indexPath -> String in
+        // 중분류 셀 선택 시 IndexPath 저장
+        input.categorySelected
+            .bind(to: selectedCategoryIndexPathRelay)
+            .disposed(by: disposeBag)
+
+        // 선택 버튼 활성화 여부 (중분류 선택 여부에 따라)
+        let isSelectButtonEnabled = selectedCategoryIndexPathRelay
+            .map { $0 != nil }
+            .asDriver(onErrorJustReturn: false)
+
+        // 선택 버튼 탭 시 선택된 카테고리 반환
+        let dismissWithCategory = input.selectButtonTapped
+            .withLatestFrom(selectedCategoryIndexPathRelay)
+            .compactMap { [weak self] indexPath -> String? in
                 guard let self = self,
+                      let indexPath = indexPath,
                       indexPath.section < self.cuisines.count else {
-                    return ""
+                    return nil
                 }
                 let cuisine = self.cuisines[indexPath.section]
                 let categories = self.categoryData[cuisine] ?? []
-                guard indexPath.item < categories.count else { return "" }
+                guard indexPath.item < categories.count else { return nil }
                 return categories[indexPath.item]
             }
             .asSignal(onErrorSignalWith: .empty())
@@ -90,7 +106,9 @@ final class CategorySelectionViewModel {
             categories: Driver.just(sections),
             selectedCuisineIndex: selectedCuisineIndexRelay.asDriver(),
             scrollToSection: scrollToSection,
-            selectedCategory: selectedCategory
+            selectedCategoryIndexPath: selectedCategoryIndexPathRelay.asDriver(),
+            isSelectButtonEnabled: isSelectButtonEnabled,
+            dismissWithCategory: dismissWithCategory
         )
     }
 }
