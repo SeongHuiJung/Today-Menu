@@ -15,6 +15,9 @@ final class CategorySelectionViewController: BaseViewController {
     private let viewModel = CategorySelectionViewModel()
     private let disposeBag = DisposeBag()
 
+    // 카테고리 선택 콜백
+    var onCategorySelected: ((String, String) -> Void)?
+
     private var categorySections: [CategorySelectionViewModel.CategorySection] = []
     private var isScrollingProgrammatically = false
     private let scrollSectionSubject = PublishSubject<Int>()
@@ -198,11 +201,14 @@ extension CategorySelectionViewController {
 
         // 선택 완료 시 처리
         output.dismissWithCategory
-            .emit(onNext: { [weak self] category in
+            .emit(onNext: { [weak self] result in
                 guard let self = self else { return }
-                print("선택된 음식: \(category)")
-                // TODO: 선택된 카테고리를 이전 화면으로 전달하고 dismiss
-                // self.navigationController?.popViewController(animated: true)
+                let (cuisine, category) = result
+                print("선택된 음식: \(cuisine) > \(category)")
+
+                // 콜백으로 선택된 카테고리 전달
+                self.onCategorySelected?(cuisine, category)
+                self.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
     }

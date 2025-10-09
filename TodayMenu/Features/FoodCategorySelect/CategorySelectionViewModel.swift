@@ -25,7 +25,7 @@ final class CategorySelectionViewModel {
         let scrollToSection: Signal<Int> // 컬렉션뷰 스크롤할 섹션
         let selectedCategoryIndexPath: Driver<IndexPath?> // 선택된 중분류 IndexPath
         let isSelectButtonEnabled: Driver<Bool> // 선택 버튼 활성화 여부
-        let dismissWithCategory: Signal<String> // 카테고리 선택 완료 후 dismiss
+        let dismissWithCategory: Signal<(cuisine: String, category: String)> // 카테고리 선택 완료 후 dismiss
     }
 
     struct CategorySection {
@@ -82,10 +82,10 @@ final class CategorySelectionViewModel {
             .map { $0 != nil }
             .asDriver(onErrorJustReturn: false)
 
-        // 선택 버튼 탭 시 선택된 카테고리 반환
+        // 선택 버튼 탭 시 선택된 카테고리와 대분류 반환
         let dismissWithCategory = input.selectButtonTapped
             .withLatestFrom(selectedCategoryIndexPathRelay)
-            .compactMap { [weak self] indexPath -> String? in
+            .compactMap { [weak self] indexPath -> (cuisine: String, category: String)? in
                 guard let self = self,
                       let indexPath = indexPath,
                       indexPath.section < self.cuisines.count else {
@@ -93,8 +93,11 @@ final class CategorySelectionViewModel {
                 }
                 let cuisine = self.cuisines[indexPath.section]
                 let categories = self.categoryData[cuisine] ?? []
+                
                 guard indexPath.item < categories.count else { return nil }
-                return categories[indexPath.item]
+                
+                let category = categories[indexPath.item]
+                return (cuisine: cuisine, category: category)
             }
             .asSignal(onErrorSignalWith: .empty())
 
