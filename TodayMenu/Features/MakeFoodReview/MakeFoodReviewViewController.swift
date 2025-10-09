@@ -106,8 +106,8 @@ extension MakeFoodReviewViewController {
         // 카테고리 선택 콜백 설정
         categoryVC.onCategorySelected = { [weak self] cuisine, category in
             guard let self else { return }
-            let foodName = "\(cuisine) > \(category)"
-            mainView.foodNameTextField.text = foodName
+            let displayText = "\(cuisine) > \(category)"
+            mainView.updateCategoryButtonTitle(displayText)
         }
 
         navigationController?.pushViewController(categoryVC, animated: true)

@@ -34,16 +34,25 @@ final class MakeFoodReviewView: BaseView {
     let foodNameLabel = BasicLabel(text: "음식 이름", alignment: .left, size: FontSize.bold, weight: .bold)
     let foodNameTextField = BasicTextField.reviewStyle(placeholder: "먹은 음식")
 
+    // 음식 카테고리 설정 Label (Calendar에서 온 경우만 표시)
+    let categorySectionLabel = {
+        let label = BasicLabel(text: "음식 카테고리", alignment: .left, size: FontSize.bold, weight: .bold)
+        label.isHidden = true
+        return label
+    }()
+
     // 음식 분류 설정 버튼 (Calendar에서 온 경우만 표시)
     let categorySettingButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .white
         button.layer.cornerRadius = 12
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.point2.cgColor
+        button.layer.borderColor = UIColor.customGray2.cgColor
         button.setTitle("음식 분류 설정", for: .normal)
-        button.setTitleColor(UIColor.point2, for: .normal)
+        button.setTitleColor(.fontLightGray, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: FontSize.context, weight: .medium)
+        button.contentHorizontalAlignment = .leading
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         button.isHidden = true
         return button
     }()
@@ -68,7 +77,7 @@ final class MakeFoodReviewView: BaseView {
         button.backgroundColor = .white
         button.layer.cornerRadius = 12
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray4.cgColor
+        button.layer.borderColor = UIColor.customGray2.cgColor
         button.contentHorizontalAlignment = .leading
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 16)
         button.titleLabel?.font = .systemFont(ofSize: FontSize.context)
@@ -108,7 +117,7 @@ final class MakeFoodReviewView: BaseView {
         button.backgroundColor = .white
         button.layer.cornerRadius = 12
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray4.cgColor
+        button.layer.borderColor = UIColor.customGray2.cgColor
         button.contentHorizontalAlignment = .leading
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 16)
         button.titleLabel?.font = .systemFont(ofSize: FontSize.context)
@@ -203,7 +212,7 @@ final class MakeFoodReviewView: BaseView {
         scrollView.addSubview(contentView)
         
         [photoSectionLabel, photoCaptureButton, selectedPhotosCollectionView,
-         foodNameLabel, foodNameTextField, categorySettingButton,
+         foodNameLabel, foodNameTextField, categorySectionLabel, categorySettingButton,
          ratingLabel, starStackView,
          eatTimeLabel, datePickerButton, calendarIconView, datePicker,
          storeNameLabel, restaurantSearchButton, searchIconView, selectedRestaurantView,
@@ -261,9 +270,15 @@ final class MakeFoodReviewView: BaseView {
             $0.height.equalTo(52)
         }
 
+        // 음식 카테고리 설정 Label (Calendar에서 온 경우만 표시)
+        categorySectionLabel.snp.makeConstraints {
+            $0.top.equalTo(foodNameTextField.snp.bottom).offset(44)
+            $0.leading.equalToSuperview().offset(20)
+        }
+
         // 음식 분류 설정 버튼 (Calendar에서 온 경우만 표시)
         categorySettingButton.snp.makeConstraints {
-            $0.top.equalTo(foodNameTextField.snp.bottom).offset(12)
+            $0.top.equalTo(categorySectionLabel.snp.bottom).offset(12)
             $0.horizontalEdges.equalToSuperview().inset(20)
             $0.height.equalTo(52)
         }
@@ -496,12 +511,19 @@ extension MakeFoodReviewView {
     }
 
     func showCategorySettingButton() {
+        categorySectionLabel.isHidden = false
         categorySettingButton.isHidden = false
 
         ratingLabel.snp.remakeConstraints {
             $0.top.equalTo(categorySettingButton.snp.bottom).offset(44)
             $0.leading.equalToSuperview().offset(20)
         }
+    }
+
+    func updateCategoryButtonTitle(_ title: String) {
+        categorySettingButton.setTitle(title, for: .normal)
+        categorySettingButton.setTitleColor(.black, for: .normal)
+        categorySettingButton.layer.borderColor = UIColor.point2.cgColor
     }
 
     func showSelectedRestaurant(_ restaurant: RestaurantData) {
