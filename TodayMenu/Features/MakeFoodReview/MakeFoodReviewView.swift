@@ -506,8 +506,9 @@ extension MakeFoodReviewView {
         companionTextField.text = ""
     }
     
-    func populateInitialData(foodName: String, storeName: String) {
+    func populateInitialData(foodName: String, placeholder: String, storeName: String) {
         foodNameTextField.text = foodName
+        foodNameTextField.placeholder = placeholder
     }
 
     func showCategorySettingButton() {

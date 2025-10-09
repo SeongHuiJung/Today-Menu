@@ -112,6 +112,9 @@ extension MakeFoodReviewViewController {
             let displayText = "\(cuisine) > \(category)"
             mainView.updateCategoryButtonTitle(displayText)
 
+            // foodNameTextField의 placeholder에 중분류 이름(category) 표시
+            mainView.foodNameTextField.placeholder = category
+
             // 선택된 카테고리를 Relay에 저장
             selectedCategoryRelay.accept(displayText)
         }
@@ -195,7 +198,7 @@ extension MakeFoodReviewViewController {
         
         output.initialData
             .drive(onNext: { [weak self] food in
-                self?.mainView.populateInitialData(foodName: food.title, storeName: "")
+                self?.mainView.populateInitialData(foodName: food.title, placeholder: food.title == "" ? "먹은 음식" : food.title, storeName: "")
             })
             .disposed(by: disposeBag)
 

@@ -289,10 +289,6 @@ extension MakeFoodReviewViewModel {
     private func validateForm(foodName: String, storeName: String, rating: Int, comment: String, taggedPeople: String) -> ValidationResult {
         
         // Calendar에서 온 경우 카테고리 선택 필수
-        if foodName.isEmpty {
-            return ValidationResult(isValid: false, errorMessage: "메뉴 이름을 입력해주세요")
-        }
-
         if isFromCalendar && selectedCategoryRelay.value == nil {
             return ValidationResult(isValid: false, errorMessage: "음식 카테고리를 선택해주세요")
         }
@@ -313,11 +309,42 @@ extension MakeFoodReviewViewModel {
             }
             
             // FoodRepository를 사용하여 FoodReview 생성
-            let foodReview = self.foodRepository.createFoodReview(
-                name: self.selectedFood.title,
-                cuisine: self.selectedFood.cuisine,
-                category: self.selectedFood.category
-            )
+            let foodReview: FoodReview
+            if self.isFromCalendar {
+                // Calendar에서 온 경우: selectedCategoryRelay 값을 파싱
+                if let selectedCategory = self.selectedCategoryRelay.value {
+                    let components = selectedCategory.split(separator: ">").map { $0.trimmingCharacters(in: .whitespaces) }
+                    let cuisine = components.first ?? ""
+                    let category = components.last ?? ""
+
+                    // foodNameTextField에 입력된 값을 우선 사용, 없으면 category 사용
+                    let foodName = self.foodNameRelay.value.trimmingCharacters(in: .whitespaces)
+                    let finalFoodName = foodName.isEmpty ? category : foodName
+
+                    foodReview = self.foodRepository.createFoodReview(
+                        name: finalFoodName,
+                        cuisine: cuisine,
+                        category: category
+                    )
+                } else {
+                    // 카테고리가 선택되지 않은 경우
+                    foodReview = self.foodRepository.createFoodReview(
+                        name: self.foodNameRelay.value,
+                        cuisine: "",
+                        category: ""
+                    )
+                }
+            } else {
+                // 추천에서 온 경우: foodNameTextField 입력값을 우선 사용
+                let foodName = self.foodNameRelay.value.trimmingCharacters(in: .whitespaces)
+                let finalFoodName = foodName.isEmpty ? self.selectedFood.title : foodName
+
+                foodReview = self.foodRepository.createFoodReview(
+                    name: finalFoodName,
+                    cuisine: self.selectedFood.cuisine,
+                    category: self.selectedFood.category
+                )
+            }
             
             // Restaurant 객체 생성
             let restaurant: Restaurant?
