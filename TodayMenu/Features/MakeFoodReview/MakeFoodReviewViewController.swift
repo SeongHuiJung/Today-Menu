@@ -24,7 +24,10 @@ final class MakeFoodReviewViewController: BaseViewController {
     
     // 선택된 사진들
     private let selectedImagesRelay = BehaviorRelay<[UIImage]>(value: [])
-    
+
+    // 선택된 카테고리 (Calendar에서만 사용)
+    private let selectedCategoryRelay = BehaviorRelay<String?>(value: nil)
+
     private let saveButton: UIButton? = nil
     
     init(food: FoodRecommendation, menuSelectedTime: Date = Date()) {
@@ -108,6 +111,9 @@ extension MakeFoodReviewViewController {
             guard let self else { return }
             let displayText = "\(cuisine) > \(category)"
             mainView.updateCategoryButtonTitle(displayText)
+
+            // 선택된 카테고리를 Relay에 저장
+            selectedCategoryRelay.accept(displayText)
         }
 
         navigationController?.pushViewController(categoryVC, animated: true)
@@ -155,7 +161,8 @@ extension MakeFoodReviewViewController {
             datePickerValueChanged: mainView.datePicker.rx.value.asObservable(),
             selectedRestaurant: selectedRestaurantRelay.asObservable(),
             selectedPhotos: selectedImagesRelay.asObservable(),
-            photoRemoveTap: photoRemoveSubject.asObservable()
+            photoRemoveTap: photoRemoveSubject.asObservable(),
+            selectedCategory: selectedCategoryRelay.asObservable()
         )
         
         let output = viewModel.transform(input)

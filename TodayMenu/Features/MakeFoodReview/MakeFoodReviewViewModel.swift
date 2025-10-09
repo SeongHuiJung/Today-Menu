@@ -31,6 +31,7 @@ final class MakeFoodReviewViewModel {
         let selectedRestaurant: Observable<RestaurantData?>
         let selectedPhotos: Observable<[UIImage]>
         let photoRemoveTap: Observable<Int>
+        let selectedCategory: Observable<String?> // 선택된 카테고리 (Calendar에서만 사용)
     }
     
     struct Output {
@@ -61,10 +62,11 @@ final class MakeFoodReviewViewModel {
     private let storeNameRelay = BehaviorRelay<String>(value: "")
     private let selectedRestaurantRelay = BehaviorRelay<RestaurantData?>(value: nil)
     private let selectedPhotosRelay = BehaviorRelay<[UIImage]>(value: [])
+    private let selectedCategoryRelay = BehaviorRelay<String?>(value: nil)
 
     private let isFromCalendar: Bool
 
-    // 추천에서 온 경우
+    // 음식 추천 > 음식 리뷰 작성 플로우
     init(selectedFood: FoodRecommendation, menuSelectedTime: Date = Date()) {
         self.selectedFood = selectedFood
         self.menuSelectedTime = menuSelectedTime
@@ -74,7 +76,7 @@ final class MakeFoodReviewViewModel {
         self.eatTimeRelay.accept(initialEatTime)
     }
 
-    // Calendar에서 온 경우
+    // Calendar > 음식 리뷰 작성 플로우
     init(selectedDate: Date) {
         self.selectedFood = FoodRecommendation(emoji: nil, title: "", cuisine: "", category: "", recommendHistoryId: nil)
         self.menuSelectedTime = selectedDate
@@ -111,7 +113,11 @@ final class MakeFoodReviewViewModel {
         input.selectedPhotos
             .bind(to: selectedPhotosRelay)
             .disposed(by: disposeBag)
-        
+
+        input.selectedCategory
+            .bind(to: selectedCategoryRelay)
+            .disposed(by: disposeBag)
+
         input.photoRemoveTap
             .withLatestFrom(selectedPhotosRelay) { index, photos in
                 var newPhotos = photos
@@ -177,12 +183,13 @@ final class MakeFoodReviewViewModel {
             input.storeNameText.startWith(""),
             starRatingRelay.asObservable(),
             input.commentText.startWith(""),
-            input.companionText.startWith("")
+            input.companionText.startWith(""),
+            selectedCategoryRelay.asObservable() // 카테고리 변경도 감지
         )
-        
+
         let validationResult = formData
-            .map { [weak self] foodName, storeName, rating, comment, taggedPeople in
-                self?.validateForm(
+            .map { [weak self] foodName, storeName, rating, comment, taggedPeople, selectedCategory in
+                return self?.validateForm(
                     foodName: foodName,
                     storeName: storeName,
                     rating: rating,
@@ -280,14 +287,20 @@ extension MakeFoodReviewViewModel {
     }
     
     private func validateForm(foodName: String, storeName: String, rating: Int, comment: String, taggedPeople: String) -> ValidationResult {
+        
+        // Calendar에서 온 경우 카테고리 선택 필수
         if foodName.isEmpty {
             return ValidationResult(isValid: false, errorMessage: "메뉴 이름을 입력해주세요")
         }
-        
+
+        if isFromCalendar && selectedCategoryRelay.value == nil {
+            return ValidationResult(isValid: false, errorMessage: "음식 카테고리를 선택해주세요")
+        }
+
         if rating == 0 {
             return ValidationResult(isValid: false, errorMessage: "별점을 선택해주세요")
         }
-        
+
         return ValidationResult(isValid: true)
     }
     
