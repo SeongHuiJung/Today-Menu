@@ -80,12 +80,23 @@ extension FoodRecommendService {
             }
 
             do {
-                let history = RecommendHistory(foodId: foodId, isAccepted: isAccepted)
                 try self.realm.write {
+                    // Skip(isAccepted: false) 저장 시, 동일한 foodId의 최신 Accept 레코드를 삭제
+                    if !isAccepted {
+                        let previousAccepted = self.realm.objects(RecommendHistory.self)
+                            .filter("foodId == %@ AND isAccepted == true", foodId)
+                            .sorted(byKeyPath: "createdAt", ascending: false)
+
+                        if let latestAccepted = previousAccepted.first {
+                            self.realm.delete(latestAccepted)
+                        }
+                    }
+
+                    // 새로운 이력 저장
+                    let history = RecommendHistory(foodId: foodId, isAccepted: isAccepted)
                     self.realm.add(history)
+                    observer.onNext(.success(history.id))
                 }
-                print("RecommendHistory 저장: \(isAccepted ? "Accept" : "Skip") (id: \(history.id))")
-                observer.onNext(.success(history.id))
                 observer.onCompleted()
             } catch {
                 observer.onNext(.failure(error))
