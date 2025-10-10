@@ -28,12 +28,14 @@ class TransitionManager {
         let page1 = UINavigationController(rootViewController: FoodRecommendViewController())
         let page2 = UINavigationController(rootViewController: FoodMapViewController())
         let page3 = UINavigationController(rootViewController: CalendarViewController())
+        let page4 = UINavigationController(rootViewController: ChartViewController())
 
         page1.view.backgroundColor = .customWhite
         page2.view.backgroundColor = .customWhite
         page3.view.backgroundColor = .customWhite
+        page4.view.backgroundColor = .customWhite
         
-        tabBarController.setViewControllers([page1, page2, page3], animated: true)
+        tabBarController.setViewControllers([page1, page2, page3, page4], animated: true)
         
         if let items = tabBarController.tabBar.items {
             items[0].selectedImage = UIImage(systemName: SFsymbol.starBubbleFill.rawValue)
@@ -47,6 +49,10 @@ class TransitionManager {
             items[2].selectedImage = UIImage(systemName: SFsymbol.calendar.rawValue)
             items[2].image = UIImage(systemName: SFsymbol.calendar.rawValue)
             items[2].title = "달력"
+            
+            items[3].selectedImage = UIImage(systemName: SFsymbol.chartBarFill.rawValue)
+            items[3].image = UIImage(systemName: SFsymbol.chartBarFill.rawValue)
+            items[3].title = "통계"
         }
         
         return tabBarController
