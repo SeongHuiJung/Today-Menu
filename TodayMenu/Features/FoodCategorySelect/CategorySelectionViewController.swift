@@ -104,7 +104,7 @@ extension CategorySelectionViewController {
                 cellType: CuisineTableViewCell.self
             )) { [weak self] index, cuisine, cell in
                 let isSelected = index == self?.selectedCuisineIndex
-                cell.configure(title: cuisine, isSelected: isSelected)
+                cell.configure(title: cuisine.displayName, isSelected: isSelected)
             }
             .disposed(by: disposeBag)
 

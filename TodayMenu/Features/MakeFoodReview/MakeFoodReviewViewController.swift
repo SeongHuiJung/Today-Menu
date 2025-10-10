@@ -109,14 +109,18 @@ extension MakeFoodReviewViewController {
         // 카테고리 선택 콜백 설정
         categoryVC.onCategorySelected = { [weak self] cuisine, category in
             guard let self else { return }
-            let displayText = "\(cuisine) > \(category)"
+
+            // cuisine rawValue를 displayName으로 변환
+            let cuisineDisplayName = Cuisine(rawValue: cuisine)?.displayName ?? cuisine
+            let displayText = "\(cuisineDisplayName) > \(category)"
             mainView.updateCategoryButtonTitle(displayText)
 
             // foodNameTextField의 placeholder에 중분류 이름(category) 표시
             mainView.foodNameTextField.placeholder = category
 
-            // 선택된 카테고리를 Relay에 저장
-            selectedCategoryRelay.accept(displayText)
+            // 선택된 카테고리를 Relay에 저장 (rawValue로 저장)
+            let storedText = "\(cuisine) > \(category)"
+            selectedCategoryRelay.accept(storedText)
         }
 
         navigationController?.pushViewController(categoryVC, animated: true)

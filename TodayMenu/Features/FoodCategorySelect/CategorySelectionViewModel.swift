@@ -19,7 +19,7 @@ final class CategorySelectionViewModel {
     }
 
     struct Output {
-        let cuisines: Driver<[String]> // 대분류 목록
+        let cuisines: Driver<[Cuisine]> // 대분류 목록
         let categories: Driver<[CategorySection]> // 중분류 섹션 목록
         let selectedCuisineIndex: Driver<Int> // 선택된 대분류 인덱스
         let scrollToSection: Signal<Int> // 컬렉션뷰 스크롤할 섹션
@@ -38,21 +38,13 @@ final class CategorySelectionViewModel {
     private let selectedCategoryIndexPathRelay = BehaviorRelay<IndexPath?>(value: nil)
 
     // 음식 데이터
-    private let cuisines = ["한식", "중식", "일식", "양식", "멕시코식", "베트남식", "태국식"]
-    private let categoryData: [String: [String]] = [
-        "한식": ["비빔밥", "김치찌개", "불고기", "냉면", "삼겹살", "떡볶이", "육회", "김밥"],
-        "중식": ["짜장면", "짬뽕", "탕수육", "마라탕", "마라샹궈"],
-        "일식": ["라멘", "초밥", "돈까스", "우동"],
-        "양식": ["피자", "파스타", "스테이크"],
-        "멕시코식": ["타코"],
-        "베트남식": ["쌀국수", "반미"],
-        "태국식": ["팟타이"]
-    ]
+    private let cuisines: [Cuisine] = [.korean, .chinese, .japanese, .western, .asian]
+    private let categoryData: [Cuisine: [String]] = FoodTypeInitializer.shared.categoryData
 
     func getCategorySections() -> [CategorySection] {
         return cuisines.map { cuisine in
             CategorySection(
-                cuisine: cuisine,
+                cuisine: cuisine.displayName,
                 categories: categoryData[cuisine] ?? []
             )
         }
@@ -93,11 +85,11 @@ final class CategorySelectionViewModel {
                 }
                 let cuisine = self.cuisines[indexPath.section]
                 let categories = self.categoryData[cuisine] ?? []
-                
+
                 guard indexPath.item < categories.count else { return nil }
-                
+
                 let category = categories[indexPath.item]
-                return (cuisine: cuisine, category: category)
+                return (cuisine: cuisine.rawValue, category: category)
             }
             .asSignal(onErrorSignalWith: .empty())
 
