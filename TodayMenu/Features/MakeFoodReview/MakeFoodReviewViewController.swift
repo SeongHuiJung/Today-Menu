@@ -161,7 +161,7 @@ extension MakeFoodReviewViewController {
             storeNameText: Observable.just(""),
             commentText: mainView.commentTextView.rx.text.orEmpty.asObservable(),
             companionText: mainView.companionTextField.rx.text.orEmpty.asObservable(),
-            datePickerValueChanged: mainView.datePicker.rx.value.asObservable(),
+            datePickerValueChanged: mainView.datePicker.rx.value.skip(1).asObservable(),
             selectedRestaurant: selectedRestaurantRelay.asObservable(),
             selectedPhotos: selectedImagesRelay.asObservable(),
             photoRemoveTap: photoRemoveSubject.asObservable(),

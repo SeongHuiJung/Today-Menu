@@ -55,7 +55,7 @@ final class MakeFoodReviewViewModel {
     
     private let starRatingRelay = BehaviorRelay<Int>(value: 0)
     private let selectedTagRelay = BehaviorRelay<Int>(value: -1)
-    private let eatTimeRelay = BehaviorRelay<Date>(value: Date())
+    private let eatTimeRelay: BehaviorRelay<Date>
     private let commentRelay = BehaviorRelay<String>(value: "")
     private let companionNameRelay = BehaviorRelay<String>(value: "")
     private let foodNameRelay = BehaviorRelay<String>(value: "")
@@ -72,8 +72,11 @@ final class MakeFoodReviewViewModel {
         self.menuSelectedTime = menuSelectedTime
         self.isFromCalendar = false
 
-        let initialEatTime = calculateInitialEatTime()
-        self.eatTimeRelay.accept(initialEatTime)
+        let oneHourLater = menuSelectedTime.addingTimeInterval(3600)
+        let now = Date()
+        let initialEatTime = oneHourLater > now ? now : oneHourLater
+
+        self.eatTimeRelay = BehaviorRelay<Date>(value: initialEatTime)
     }
 
     // Calendar > 음식 리뷰 작성 플로우
@@ -82,7 +85,24 @@ final class MakeFoodReviewViewModel {
         self.menuSelectedTime = selectedDate
         self.isFromCalendar = true
 
-        self.eatTimeRelay.accept(selectedDate)
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
+
+        // selectedDate를 한국 시간대로 설정
+        let koreaComponents = calendar.dateComponents(in: TimeZone(identifier: "Asia/Seoul")!, from: selectedDate)
+
+        // 선택한 Date의 오후 12시로 설정
+        var newComponents = DateComponents()
+        newComponents.year = koreaComponents.year
+        newComponents.month = koreaComponents.month
+        newComponents.day = koreaComponents.day
+        newComponents.hour = 12
+        newComponents.minute = 0
+        newComponents.second = 0
+        newComponents.timeZone = TimeZone(identifier: "Asia/Seoul")!
+
+        let fixedDate = calendar.date(from: newComponents)!
+        self.eatTimeRelay = BehaviorRelay<Date>(value: fixedDate)
     }
     
     func transform(_ input: Input) -> Output {
