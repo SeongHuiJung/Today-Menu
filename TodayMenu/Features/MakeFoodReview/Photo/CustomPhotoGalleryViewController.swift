@@ -58,9 +58,11 @@ final class CustomPhotoGalleryViewController: BaseViewController {
     
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("추가", for: .normal)
+        button.setTitle("선택", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
         button.setTitleColor(.point2, for: .normal)
+        button.setTitleColor(.systemGray3, for: .disabled)
+        button.isEnabled = false
         return button
     }()
     
@@ -172,11 +174,11 @@ final class CustomPhotoGalleryViewController: BaseViewController {
             })
             .disposed(by: disposeBag)
         
-        // 선택 개수 표시
+        // 선택 개수에 따른 버튼 활성화/비활성화
         selectedPhotosRelay
-            .map { "\($0.count)개 선택됨" }
-            .subscribe(onNext: { [weak self] text in
-                self?.addButton.setTitle(text.isEmpty ? "추가" : text, for: .normal)
+            .map { $0.count > 0 }
+            .subscribe(onNext: { [weak self] isEnabled in
+                self?.addButton.isEnabled = isEnabled
             })
             .disposed(by: disposeBag)
         
