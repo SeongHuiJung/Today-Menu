@@ -16,7 +16,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         
         // 앱 최초 실행 시 FoodType 초기 데이터 생성
-        FoodTypeInitializer.initializeIfNeeded()
+        FoodTypeInitializer.shared.initializeCategoryData()
 //        MockDataGenerator.generateSeptemberMockData()
 //        MockDataGenerator.printRecommendScoreDetails()
         
