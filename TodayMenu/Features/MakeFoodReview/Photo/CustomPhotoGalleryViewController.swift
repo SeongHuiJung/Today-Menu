@@ -311,9 +311,9 @@ extension CustomPhotoGalleryViewController: UICollectionViewDelegate {
         // 사진 셀 탭
         let photoIndex = indexPath.item - 1
         guard let asset = allPhotos?.object(at: photoIndex) else { return }
-        
+
         var selectedAssets = selectedPhotosRelay.value
-        
+
         if let index = selectedAssets.firstIndex(of: asset) {
             // 이미 선택된 사진 -> 선택 해제
             selectedAssets.remove(at: index)
@@ -333,11 +333,30 @@ extension CustomPhotoGalleryViewController: UICollectionViewDelegate {
                 return
             }
         }
-        
+
         selectedPhotosRelay.accept(selectedAssets)
-        collectionView.reloadData()
+
+        updateVisibleCells()
     }
     
+    // 이미지 선택 번호 update
+    private func updateVisibleCells() {
+        let selectedAssets = selectedPhotosRelay.value
+
+        for cell in collectionView.visibleCells {
+            guard let photoCell = cell as? PhotoCell,
+                  let indexPath = collectionView.indexPath(for: cell),
+                  indexPath.item > 0 else { continue }
+
+            let photoIndex = indexPath.item - 1
+            guard let asset = allPhotos?.object(at: photoIndex) else { continue }
+
+            let isSelected = selectedAssets.contains(asset)
+            let selectionIndex = selectedAssets.firstIndex(of: asset)
+            photoCell.updateSelection(isSelected: isSelected, index: selectionIndex)
+        }
+    }
+
     private func presentCamera() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         
@@ -390,14 +409,16 @@ extension CustomPhotoGalleryViewController: UIImagePickerControllerDelegate, UIN
                 if success {
                     // 사진 목록 새로고침
                     self?.loadPhotos()
-                    
+
                     // 방금 찍은 사진을 자동 선택
                     if let firstAsset = self?.allPhotos?.firstObject {
                         var selectedAssets = self?.selectedPhotosRelay.value ?? []
                         if selectedAssets.count + (self?.existingCount ?? 0) < (self?.maxSelection ?? 5) {
                             selectedAssets.append(firstAsset)
                             self?.selectedPhotosRelay.accept(selectedAssets)
-                            self?.collectionView.reloadData()
+
+                            // 셀 직접 업데이트
+                            self?.updateVisibleCells()
                         }
                     }
                 }
