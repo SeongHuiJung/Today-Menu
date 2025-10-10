@@ -58,7 +58,7 @@ final class MakeFoodReviewViewController: BaseViewController {
     
     override func configureView() {
         super.configureView()
-        title = "새 리뷰"
+        title = "리뷰 작성"
         navigationController?.navigationBar.prefersLargeTitles = false
     }
 }
@@ -133,7 +133,7 @@ extension MakeFoodReviewViewController {
             self?.mainView.showSelectedRestaurant(restaurant)
         }
         
-        present(searchVC, animated: true)
+        navigationController?.pushViewController(searchVC, animated: true)
     }
 }
 

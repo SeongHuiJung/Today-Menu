@@ -10,27 +10,6 @@ import SnapKit
 
 final class RestaurantSearchView: BaseView {
     
-    let headerView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(named: "point")
-        return view
-    }()
-    
-    let backButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        button.tintColor = .white
-        return button
-    }()
-    
-    let titleLabel = BasicLabel(
-        text: "식당 검색",
-        alignment: .left,
-        size: FontSize.title,
-        weight: .bold,
-        textColor: UIColor(named: "fontWhite") ?? .white
-    )
-    
     let searchContainer = {
         let view = UIView()
         view.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)
@@ -49,11 +28,11 @@ final class RestaurantSearchView: BaseView {
     
     let searchButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let config = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
         let image = UIImage(systemName: "magnifyingglass", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = UIColor(named: "point")
-        button.backgroundColor = .white
+        button.tintColor = .customGray3
+        button.backgroundColor = .clear
         button.layer.cornerRadius = 15
         return button
     }()
@@ -77,39 +56,20 @@ final class RestaurantSearchView: BaseView {
     }()
     
     override func configureHierarchy() {
-        [headerView, searchContainer, resultCountLabel, tableView].forEach {
+        [searchContainer, resultCountLabel, tableView].forEach {
             addSubview($0)
         }
-        
-        [backButton, titleLabel].forEach {
-            headerView.addSubview($0)
-        }
-        
+
         [searchTextField, searchButton].forEach {
             searchContainer.addSubview($0)
         }
     }
     
     override func configureLayout() {
-        headerView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.height.equalTo(110)
-        }
-        
-        backButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(16)
-            $0.bottom.equalToSuperview().offset(-16)
-            $0.width.height.equalTo(30)
-        }
-        
-        titleLabel.snp.makeConstraints {
-            $0.leading.equalTo(backButton.snp.trailing).offset(12)
-            $0.centerY.equalTo(backButton)
-        }
-        
+
         searchContainer.snp.makeConstraints {
-            $0.top.equalTo(headerView.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.top.equalTo(safeAreaLayoutGuide).inset(20)
+            $0.horizontalEdges.equalToSuperview().inset(20)
             $0.height.equalTo(44)
         }
         

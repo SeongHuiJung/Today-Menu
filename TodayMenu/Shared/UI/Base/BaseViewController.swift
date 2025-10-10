@@ -18,15 +18,13 @@ class BaseViewController: UIViewController {
     
     func configureView() {
         view.backgroundColor = .customWhite
-        
         navigationItem.backButtonTitle = ""
-        
         let navigationBarAppearance = UINavigationBarAppearance()
         navigationBarAppearance.configureWithOpaqueBackground()
         navigationBarAppearance.backgroundColor = .customWhite
         navigationBarAppearance.titleTextAttributes = [.foregroundColor: UIColor.fontBlack]
-        
         navigationController?.navigationBar.standardAppearance = navigationBarAppearance
+        navigationController?.navigationBar.tintColor = .fontBlack
     }
     
     func configureHierarchy() { }

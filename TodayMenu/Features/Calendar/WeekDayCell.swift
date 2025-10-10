@@ -126,7 +126,7 @@ final class WeekDayCell: UICollectionViewCell {
     
     private func updateSelection() {
         if isSelected {
-            containerView.backgroundColor = UIColor(named: "point")
+            containerView.backgroundColor = .point2
             dayLabel.textColor = .white
             dateLabel.textColor = .white
             monthLabel.textColor = .white

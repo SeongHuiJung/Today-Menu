@@ -30,6 +30,7 @@ final class RestaurantSearchViewController: BaseViewController {
     
     override func configureView() {
         super.configureView()
+        title = "식당 검색"
         view.backgroundColor = .white
     }
     
@@ -44,14 +45,7 @@ final class RestaurantSearchViewController: BaseViewController {
         )
         
         let output = viewModel.transform(input: input)
-        
-        // 뒤로가기 버튼 처리
-        mainView.backButton.rx.tap
-            .subscribe(with: self) { owner, _ in
-                owner.dismiss(animated: true)
-            }
-            .disposed(by: disposeBag)
-        
+          
         // 검색 결과를 테이블뷰에 바인딩
         output.searchResults
             .drive(mainView.tableView.rx.items(
@@ -93,7 +87,7 @@ final class RestaurantSearchViewController: BaseViewController {
         mainView.tableView.rx.modelSelected(RestaurantData.self)
             .subscribe(with: self) { owner, restaurant in
                 owner.onRestaurantSelected?(restaurant)
-                owner.dismiss(animated: true)
+                owner.navigationController?.popViewController(animated: true)
             }
             .disposed(by: disposeBag)
     }

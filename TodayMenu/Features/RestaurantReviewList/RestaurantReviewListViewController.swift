@@ -33,7 +33,6 @@ final class RestaurantReviewListViewController: BaseViewController {
     override func configureView() {
         super.configureView()
         title = "\(viewModel.restaurant.name) 리뷰 목록"
-        navigationController?.navigationBar.prefersLargeTitles = false
     }
     
     private func setupTableView() {

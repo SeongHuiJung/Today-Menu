@@ -11,7 +11,7 @@ import RxCocoa
 import MapKit
 import CoreLocation
 
-final class FoodMapViewController: UIViewController {
+final class FoodMapViewController: BaseViewController {
     
     private let viewModel = FoodMapViewModel.shared
     private let disposeBag = DisposeBag()
@@ -183,6 +183,7 @@ final class FoodMapViewController: UIViewController {
         guard let restaurant = currentRestaurant else { return }
         
         let reviewListVC = RestaurantReviewListViewController(restaurant: restaurant)
+        reviewListVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(reviewListVC, animated: true)
     }
 }

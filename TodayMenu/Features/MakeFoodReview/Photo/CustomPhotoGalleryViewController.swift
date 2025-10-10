@@ -60,7 +60,7 @@ final class CustomPhotoGalleryViewController: BaseViewController {
         let button = UIButton(type: .system)
         button.setTitle("추가", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
-        button.setTitleColor(.systemBlue, for: .normal)
+        button.setTitleColor(.point2, for: .normal)
         return button
     }()
     
