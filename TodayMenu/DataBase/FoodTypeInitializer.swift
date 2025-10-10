@@ -27,12 +27,35 @@ final class FoodTypeInitializer {
         UserDefaultsManager.hasInitializedFoodTypes = true
         print("FoodType 초기 데이터 생성 완료")
     }
+    static let shared = FoodTypeInitializer()
+    
+    let categoryData: [Cuisine: [String]] = [
+        .korean: [
+            "비빔밥", "김치찌개", "불고기", "냉면", "삼겹살", "떡볶이", "육회", "김밥",
+            "제육덮밥", "감자탕", "닭볶음탕", "된장찌개", "라면", "부대찌개",
+            "국수", "닭갈비", "보쌈", "조개구이", "생선구이", "국밥"
+        ],
+        .chinese: [
+            "짜장면", "짬뽕", "탕수육", "마라탕", "마라샹궈", "딤섬", "마파두부"
+        ],
+        .japanese: [
+            "라멘", "초밥", "돈까스", "우동", "가츠동", "나베", "회", "소바", "텐동", "샤브샤브"
+        ],
+        .western: [
+            "피자", "파스타", "스테이크", "햄버거", "리조또", "브런치", "샌드위치", "오므라이스"
+        ],
+        .asian: [
+            "타코", "퀘사디아", "부리또", "쌀국수", "반미", "분짜", "반쎄오", "팟타이", "뿌팟퐁커리", "똠얌꿍", "나시고랭"
+        ]
+    ]
     
     // 강제로 초기화 (테스트용)
     static func forceInitialize() {
         print("FoodType 강제 초기화")
         
         // 기존 FoodType 삭제
+    // 앱 실행 시 FoodType 데이터 동기화
+    func initializeCategoryData() {
         do {
             let realm = try Realm()
             let existingFoodTypes = realm.objects(FoodType.self)

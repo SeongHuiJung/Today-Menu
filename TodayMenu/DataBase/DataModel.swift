@@ -142,7 +142,7 @@ enum CompanionType: String, CaseIterable {
 }
 
 enum Cuisine: String, CaseIterable {
-    case korean, chinese, japanese, western, mexican, vietnamese, thai
+    case korean, chinese, japanese, western, asian
     
     var displayName: String {
         switch self {
@@ -150,9 +150,7 @@ enum Cuisine: String, CaseIterable {
         case .chinese: return "중식"
         case .japanese: return "일식"
         case .western: return "양식"
-        case .mexican: return "멕시코식"
-        case .vietnamese: return "베트남식"
-        case .thai: return "태국식"
+        case .asian: return "아시안"
         }
     }
 }
