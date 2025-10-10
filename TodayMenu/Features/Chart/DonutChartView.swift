@@ -10,7 +10,7 @@ import UIKit
 final class DonutChartView: UIView {
 
     private var segmentLayers: [CAShapeLayer] = []
-    private var chartData: [String] = []
+    private var chartData: [ChartDataModel] = []
     private var currentRotation: CGFloat = 0
 
     private let colors: [UIColor] = [
@@ -34,7 +34,7 @@ final class DonutChartView: UIView {
         addGestureRecognizer(panGesture)
     }
 
-    func configure(with data: [String]) {
+    func configure(with data: [ChartDataModel]) {
         self.chartData = data
         drawChart()
     }
@@ -93,12 +93,14 @@ extension DonutChartView {
         let radius = min(bounds.width, bounds.height) / 2 - 20
         let innerRadius = radius * 0.6 // 도넛 형태를 위한 내부 반지름
 
-        let totalSegments = chartData.count
-        let anglePerSegment = (2 * CGFloat.pi) / CGFloat(totalSegments)
+        // 누적 각도 추적
+        var currentAngle: CGFloat = currentRotation - CGFloat.pi / 2
 
-        for (index, _) in chartData.enumerated() {
-            let startAngle = CGFloat(index) * anglePerSegment + currentRotation - CGFloat.pi / 2
-            let endAngle = startAngle + anglePerSegment
+        for (index, data) in chartData.enumerated() {
+            // 비율에 따라 각도 계산
+            let segmentAngle = 2 * CGFloat.pi * CGFloat(data.percentage)
+            let startAngle = currentAngle
+            let endAngle = currentAngle + segmentAngle
 
             // 외부 원호
             let outerPath = UIBezierPath(
@@ -129,6 +131,9 @@ extension DonutChartView {
 
             layer.addSublayer(shapeLayer)
             segmentLayers.append(shapeLayer)
+
+            // 다음 섹션을 위해 각도 업데이트
+            currentAngle = endAngle
         }
 
         // 중앙 원 (도넛 홀)

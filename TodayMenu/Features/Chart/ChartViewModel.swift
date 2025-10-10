@@ -19,15 +19,20 @@ final class ChartViewModel {
     }
 
     struct Output {
-        let chartData: Driver<[String]>
+        let chartData: Driver<[ChartDataModel]>
         let currentRotation: Driver<CGFloat>
     }
 
     func transform(input: Input) -> Output {
 
-        // 테스트 데이터
+        // 테스트 데이터 - 비율 기반 (10%, 30%, 55%, 5%)
         let chartData = input.viewDidLoad
-            .map { ["1", "2", "3", "4"] }
+            .map { [
+                ChartDataModel(label: "1", percentage: 0.1),
+                ChartDataModel(label: "2", percentage: 0.3),
+                ChartDataModel(label: "3", percentage: 0.55),
+                ChartDataModel(label: "4", percentage: 0.05)
+            ] }
             .asDriver(onErrorJustReturn: [])
 
         let currentRotation = input.rotationAngle
