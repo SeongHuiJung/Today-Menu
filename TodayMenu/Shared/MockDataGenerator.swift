@@ -82,7 +82,6 @@ final class MockDataGenerator {
                 companion: [companion],
                 photos: photos,
                 ateAt: date,
-                averagePrice: nil,
                 emoji: nil
             )
             
@@ -197,7 +196,6 @@ final class MockDataGenerator {
             companion: [companion],
             photos: [],
             ateAt: targetDate,
-            averagePrice: nil,
             emoji: nil
         )
 
@@ -248,7 +246,6 @@ final class MockDataGenerator {
                 companion: [companion],
                 photos: [],
                 ateAt: date,
-                averagePrice: nil,
                 emoji: nil
             )
 

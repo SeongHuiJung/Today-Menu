@@ -19,10 +19,9 @@ class Review: Object {
     @Persisted var ateAt: Date // 먹은 날짜/시간
     @Persisted var createdAt: Date // 데이터 생성 시각
     @Persisted var updatedAt: Date? // 수정 시각 (수정한 적 없으면 nil)
-    @Persisted var averagePrice: Int? // 음식 평균 가격
     @Persisted var emoji: String? // 이모지 이름
     
-    convenience init(food: [FoodReview], restaurant: Restaurant? = nil, rating: Double, comment: String? = nil, companion: [Companion] = [], photos: [String] = [], ateAt: Date, averagePrice: Int? = nil, emoji: String? = nil) {
+    convenience init(food: [FoodReview], restaurant: Restaurant? = nil, rating: Double, comment: String? = nil, companion: [Companion] = [], photos: [String] = [], ateAt: Date, emoji: String? = nil) {
         self.init()
         
         self.food.append(objectsIn: food)
@@ -34,7 +33,6 @@ class Review: Object {
         self.ateAt = ateAt
         self.createdAt = Date()
         self.updatedAt = nil
-        self.averagePrice = averagePrice
         self.emoji = emoji
     }
 }
@@ -43,6 +41,7 @@ class FoodReview: Object {
     @Persisted(primaryKey: true) var id: ObjectId
     @Persisted var name: String // 음식 이름
     @Persisted var foodId: String // 음식 고유번호
+    @Persisted var price: Int? // 음식 가격
     
     // Inverse Relationship
     @Persisted(originProperty: "food")
