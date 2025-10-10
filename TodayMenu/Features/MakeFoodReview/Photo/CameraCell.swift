@@ -43,7 +43,8 @@ final class CameraCell: BaseCollectionViewCell {
         contentView.addSubview(titleLabel)
         
         cameraIconView.snp.makeConstraints {
-            $0.center.equalToSuperview().offset(-10)
+            $0.centerY.equalToSuperview().offset(-10)
+            $0.centerX.equalToSuperview()
             $0.width.height.equalTo(40)
         }
         

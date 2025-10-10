@@ -265,8 +265,9 @@ extension MakeFoodReviewViewController {
         
         // 사진 추가 버튼 탭 시, 최대 개수 체크 후 이미지 피커 표시
         output.showImagePicker
-            .emit(with: self) { owner, _ in
-                owner.presentImagePicker()
+            .withLatestFrom(output.selectedPhotos.asSignal(onErrorJustReturn: []))
+            .emit(with: self) { owner, currentPhotos in
+                owner.presentImagePicker(currentCount: currentPhotos.count)
             }
             .disposed(by: disposeBag)
         
@@ -298,9 +299,7 @@ extension MakeFoodReviewViewController {
 
 // MARK: - Image Picker
 extension MakeFoodReviewViewController {
-    private func presentImagePicker() {
-        let currentCount = selectedImagesRelay.value.count
-        
+    private func presentImagePicker(currentCount: Int) {
         // 커스텀 갤러리 표시
         let galleryVC = CustomPhotoGalleryViewController(existingPhotoCount: currentCount)
         galleryVC.modalPresentationStyle = .fullScreen
