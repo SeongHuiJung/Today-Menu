@@ -44,6 +44,19 @@ final class DonutChartView: UIView {
 
     func configure(with data: [ChartDataModel]) {
         self.chartData = data
+
+        // 초기 상태: 첫 번째 셀이 하단 중앙에 오도록 설정
+        if !data.isEmpty {
+            currentCellIndex = 0
+
+            // 첫 번째 셀의 중앙 각도 계산
+            let firstSegmentAngle = 2 * CGFloat.pi * CGFloat(data[0].percentage)
+            let firstCenterAngle = firstSegmentAngle / 2
+
+            // 첫 번째 셀이 하단 중앙(π/2)에 오도록 회전 각도 설정
+            currentRotation = CGFloat.pi - firstCenterAngle
+        }
+
         drawChart()
     }
 
