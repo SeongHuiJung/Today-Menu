@@ -58,7 +58,7 @@ extension ChartViewController {
         let output = viewModel.transform(input: input)
 
         // 차트 데이터 바인딩
-        output.chartData
+        output.categoryReviewChartData
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
                 donutChartView.configure(with: data)
