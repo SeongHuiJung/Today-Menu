@@ -155,11 +155,31 @@ extension DonutChartView {
             if index == currentCellIndex {
                 let centerAngle = accumulatedAngle + segmentAngle / 2
                 let targetRotation = CGFloat.pi - centerAngle
-                rotateChart(by: targetRotation, animated: true)
+
+                // 최단 경로로 회전하도록 각도 조정
+                let adjustedTarget = findShortestRotationPath(from: currentRotation, to: targetRotation)
+
+                rotateChart(by: adjustedTarget, animated: true)
                 return
             }
             accumulatedAngle += segmentAngle
         }
+    }
+
+    private func findShortestRotationPath(from currentAngle: CGFloat, to targetAngle: CGFloat) -> CGFloat {
+        // 현재 각도와 목표 각도의 차이 계산
+        var delta = targetAngle - currentAngle
+
+        // 차이를 -π ~ π 범위로 정규화 (최단 경로)
+        while delta > CGFloat.pi {
+            delta -= 2 * CGFloat.pi
+        }
+        while delta < -CGFloat.pi {
+            delta += 2 * CGFloat.pi
+        }
+
+        // 최단 경로로 이동할 목표 각도 반환
+        return currentAngle + delta
     }
 
     
