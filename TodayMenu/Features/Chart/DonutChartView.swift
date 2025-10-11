@@ -59,10 +59,25 @@ final class DonutChartView: UIView {
 extension DonutChartView {
     private func rotateChart(by angle: CGFloat, animated: Bool = false) {
         if animated {
-            // 애니메이션과 함께 회전
-            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseOut, .allowUserInteraction]) {
-                self.currentRotation = angle
-                self.drawChart()
+            // 회전 애니메이션
+            let steps = 30 // 애니메이션 프레임 수
+            let duration: TimeInterval = 0.5
+            let startRotation = currentRotation
+            let endRotation = angle
+
+            for i in 0...steps {
+                let progress = CGFloat(i) / CGFloat(steps)
+                let t = progress
+                let easedProgress = 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2)
+
+                let delay = duration * Double(i) / Double(steps)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                    guard let self = self else { return }
+                    let interpolatedRotation = startRotation + (endRotation - startRotation) * easedProgress
+                    self.currentRotation = interpolatedRotation
+                    self.drawChart()
+                }
             }
         } else {
             currentRotation = angle
