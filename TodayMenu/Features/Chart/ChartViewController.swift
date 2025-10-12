@@ -24,6 +24,11 @@ final class ChartViewController: BaseViewController {
         return view
     }()
 
+    private let categoryListView: CategoryListView = {
+        let view = CategoryListView()
+        return view
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         bind()
@@ -32,18 +37,21 @@ final class ChartViewController: BaseViewController {
 
     override func configureHierarchy() {
         view.addSubview(donutChartView)
+        view.addSubview(categoryListView)
     }
 
     override func configureLayout() {
         donutChartView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.centerX.equalToSuperview()
             make.width.height.equalTo(300)
         }
-    }
 
-    override func configureView() {
-        view.backgroundColor = .systemBackground
-        navigationItem.title = "통계"
+        categoryListView.snp.makeConstraints { make in
+            make.top.equalTo(donutChartView.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview()
+            make.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide).offset(-20)
+        }
     }
 }
 
@@ -52,7 +60,8 @@ extension ChartViewController {
     private func bind() {
         let input = ChartViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
-            rotationAngle: rotationAngleSubject.asObservable()
+            rotationAngle: rotationAngleSubject.asObservable(),
+            selectedCuisine: donutChartView.selectedCuisine
         )
 
         let output = viewModel.transform(input: input)
@@ -62,6 +71,14 @@ extension ChartViewController {
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
                 donutChartView.configure(with: data)
+            })
+            .disposed(by: disposeBag)
+
+        // 카테고리 리스트 바인딩
+        output.categoryBreakdown
+            .drive(onNext: { [weak self] data in
+                guard let self else { return }
+                categoryListView.configure(with: data)
             })
             .disposed(by: disposeBag)
     }

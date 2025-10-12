@@ -6,17 +6,25 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 final class DonutChartView: UIView {
 
     private var segmentLayers: [CAShapeLayer] = []
-    private var chartData: [ChartDataModel] = []
+    private var chartData: [DonutChartDataModel] = []
     private var currentRotation: CGFloat = 0
     private var selectedIndex: Int = 0
     private var currentCellIndex: Int = 0
     private var labelViews: [UILabel] = [] // 차트 카테고리 이름 레이블 리스트
     private var isAnimating: Bool = false // 애니메이션 진행 중 여부
     private var hasDrawnInitialChart: Bool = false // 초기 차트 렌더링 여부
+
+    // 선택된 cuisine을 방출하는 Subject
+    private let selectedCuisineSubject = PublishSubject<String>()
+    var selectedCuisine: Observable<String> {
+        return selectedCuisineSubject.asObservable()
+    }
 
     private let colors: [UIColor] = [
         .point0,
@@ -45,7 +53,7 @@ final class DonutChartView: UIView {
         addGestureRecognizer(panGesture)
     }
 
-    func configure(with data: [ChartDataModel]) {
+    func configure(with data: [DonutChartDataModel]) {
         self.chartData = data
 
         guard !data.isEmpty else {
@@ -75,7 +83,15 @@ final class DonutChartView: UIView {
         drawChart()
 
         // 레이블 표시
-        self.showLabels()
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            showLabels()
+
+            // 초기 선택된 cuisine 방출
+            if selectedIndex >= 0 && selectedIndex < chartData.count {
+                selectedCuisineSubject.onNext(chartData[selectedIndex].rawValue)
+            }
+        }
     }
 }
 
@@ -110,6 +126,11 @@ extension DonutChartView {
                     if i == steps {
                         self.isAnimating = false
                         self.showLabels()
+
+                        // 애니메이션 완료 후 선택된 cuisine 방출
+                        if self.selectedIndex >= 0 && self.selectedIndex < self.chartData.count {
+                            self.selectedCuisineSubject.onNext(self.chartData[self.selectedIndex].rawValue)
+                        }
                     }
                 }
             }
@@ -398,29 +419,5 @@ extension DonutChartView {
         centerCircle.path = centerPath.cgPath
         centerCircle.fillColor = UIColor.systemBackground.cgColor
         layer.addSublayer(centerCircle)
-
-        // 선택 표시 마커 추가 (하단 중앙)
-        addSelectionMarker(at: center, radius: radius)
-    }
-
-    private func addSelectionMarker(at center: CGPoint, radius: CGFloat) {
-        // 하단 중앙에 작은 삼각형 마커 표시
-        let markerSize: CGFloat = 15
-        let markerDistance = radius + 10
-
-        let markerX = center.x
-        let markerY = center.y + markerDistance
-
-        let markerPath = UIBezierPath()
-        markerPath.move(to: CGPoint(x: markerX, y: markerY))
-        markerPath.addLine(to: CGPoint(x: markerX - markerSize / 2, y: markerY + markerSize))
-        markerPath.addLine(to: CGPoint(x: markerX + markerSize / 2, y: markerY + markerSize))
-        markerPath.close()
-
-        let markerLayer = CAShapeLayer()
-        markerLayer.path = markerPath.cgPath
-        markerLayer.fillColor = UIColor.label.cgColor
-
-        layer.addSublayer(markerLayer)
     }
 }
