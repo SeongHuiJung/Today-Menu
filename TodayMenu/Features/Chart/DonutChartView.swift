@@ -14,6 +14,9 @@ final class DonutChartView: UIView {
     private var currentRotation: CGFloat = 0
     private var selectedIndex: Int = 0
     private var currentCellIndex: Int = 0
+    private var labelViews: [UILabel] = [] // 차트 카테고리 이름 레이블 리스트
+    private var isAnimating: Bool = false // 애니메이션 진행 중 여부
+    private var hasDrawnInitialChart: Bool = false // 초기 차트 렌더링 여부
 
     private let colors: [UIColor] = [
         .point0,
@@ -45,26 +48,34 @@ final class DonutChartView: UIView {
     func configure(with data: [ChartDataModel]) {
         self.chartData = data
 
-        // 초기 상태: 첫 번째 셀이 하단 중앙에 오도록 설정
-        if !data.isEmpty {
-            currentCellIndex = 0
-
-            // 첫 번째 셀의 중앙 각도 계산
-            let firstSegmentAngle = 2 * CGFloat.pi * CGFloat(data[0].percentage)
-            let firstCenterAngle = firstSegmentAngle / 2
-
-            // 첫 번째 셀이 하단 중앙(π/2)에 오도록 회전 각도 설정
-            currentRotation = CGFloat.pi - firstCenterAngle
+        guard !data.isEmpty else {
+            return
         }
 
-        drawChart()
+        // 초기 상태: 첫 번째 셀이 하단 중앙에 오도록 설정
+        currentCellIndex = 0
+
+        // 첫 번째 셀의 중앙 각도 계산
+        let firstSegmentAngle = 2 * CGFloat.pi * CGFloat(data[0].percentage)
+        let firstCenterAngle = firstSegmentAngle / 2
+
+        // 첫 번째 셀이 하단 중앙(π/2)에 오도록 회전 각도 설정
+        currentRotation = CGFloat.pi - firstCenterAngle
+
+        // 레이아웃이 완료된 후 차트와 레이블 표시
+        setNeedsLayout()
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        if !chartData.isEmpty {
-            drawChart()
-        }
+
+        // 초기 차트를 한 번만 그림
+        guard !hasDrawnInitialChart, !chartData.isEmpty, bounds.width > 0, bounds.height > 0 else { return }
+        hasDrawnInitialChart = true
+        drawChart()
+
+        // 레이블 표시
+        self.showLabels()
     }
 }
 
@@ -72,6 +83,10 @@ final class DonutChartView: UIView {
 extension DonutChartView {
     private func rotateChart(by angle: CGFloat, animated: Bool = false) {
         if animated {
+            // 애니메이션 시작 시 레이블 숨기기
+            isAnimating = true
+            hideLabels()
+
             // 회전 애니메이션
             let steps = 30 // 애니메이션 프레임 수
             let duration: TimeInterval = 0.5
@@ -90,11 +105,83 @@ extension DonutChartView {
                     let interpolatedRotation = startRotation + (endRotation - startRotation) * easedProgress
                     self.currentRotation = interpolatedRotation
                     self.drawChart()
+
+                    // 마지막 프레임에서 레이블 표시
+                    if i == steps {
+                        self.isAnimating = false
+                        self.showLabels()
+                    }
                 }
             }
         } else {
             currentRotation = angle
             drawChart()
+            if !isAnimating {
+                showLabels()
+            }
+        }
+    }
+
+    private func hideLabels() {
+        labelViews.forEach { $0.removeFromSuperview() }
+        labelViews.removeAll()
+    }
+
+    private func showLabels() {
+        guard !chartData.isEmpty else { return }
+
+        hideLabels() // 기존 레이블 제거
+
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let radius = min(bounds.width, bounds.height) / 2 - 20
+        let innerRadius = radius * 0.6
+
+        var accumulatedAngle: CGFloat = currentRotation - CGFloat.pi / 2
+
+        for (_, data) in chartData.enumerated() {
+            let segmentAngle = 2 * CGFloat.pi * CGFloat(data.percentage)
+            let midAngle = accumulatedAngle + segmentAngle / 2
+
+            // 레이블 텍스트
+            let percentageText = String(format: "%.0f%%", data.percentage * 100)
+            let labelText = "\(data.label) \(percentageText)"
+
+            let label = UILabel()
+            label.text = labelText
+            label.font = .systemFont(ofSize: 14, weight: .semibold)
+            label.textColor = .label
+            label.textAlignment = .center
+            label.sizeToFit()
+
+            // 셀이 작으면 바깥쪽에 배치
+            let minPercentageForInside: Double = 0.15 // 15% 이상이면 안쪽
+            let labelRadius: CGFloat
+
+            if data.percentage >= minPercentageForInside {
+                // 셀 안쪽 (도넛 중간)
+                labelRadius = (radius + innerRadius) / 2
+            } else {
+                // 셀 바깥쪽
+                labelRadius = radius + 40
+            }
+
+            // 레이블 위치 계산
+            let labelX = center.x + labelRadius * cos(midAngle)
+            let labelY = center.y + labelRadius * sin(midAngle)
+
+            // frame을 사용하여 레이아웃 사이클 방지
+            let labelSize = label.bounds.size
+            label.frame = CGRect(
+                x: labelX - labelSize.width / 2,
+                y: labelY - labelSize.height / 2,
+                width: labelSize.width,
+                height: labelSize.height
+            )
+
+            addSubview(label)
+            labelViews.append(label)
+
+            accumulatedAngle += segmentAngle
         }
     }
 
@@ -219,7 +306,7 @@ extension DonutChartView {
             let endAngle = accumulatedAngle + segmentAngle
 
             // 선택 각도 정규화
-            var normalizedSelectionAngle = selectionAngle
+            let normalizedSelectionAngle = selectionAngle
             var normalizedStartAngle = accumulatedAngle
             var normalizedEndAngle = endAngle
 
