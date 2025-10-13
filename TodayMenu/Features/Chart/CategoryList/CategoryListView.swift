@@ -52,6 +52,7 @@ final class CategoryListView: BaseView {
 
     override func configureLayout() {
         containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(16)
         }
 
         tableView.snp.makeConstraints { make in
@@ -61,7 +62,8 @@ final class CategoryListView: BaseView {
 
         expandButton.snp.makeConstraints { make in
             make.top.equalTo(tableView.snp.bottom).offset(8)
-            make.horizontalEdges.bottom.equalToSuperview().inset(12)
+            make.leading.trailing.equalToSuperview().inset(12)
+            make.bottom.equalToSuperview().inset(12)
             make.height.equalTo(36)
         }
     }
@@ -97,6 +99,7 @@ final class CategoryListView: BaseView {
 
     @objc private func toggleExpand() {
         isExpanded.toggle()
+
         // 확장: 모든 카테고리 표시
         if isExpanded {
             categories = allCategories
@@ -105,6 +108,7 @@ final class CategoryListView: BaseView {
             let upArrow = UIImage(systemName: "chevron.up", withConfiguration: imageConfig)
             expandButton.setImage(upArrow, for: .normal)
         }
+
         // 축소: 5개만 표시
         else {
             categories = Array(allCategories.prefix(maxVisibleItems))
@@ -112,9 +116,39 @@ final class CategoryListView: BaseView {
             let imageConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
             let downArrow = UIImage(systemName: "chevron.down", withConfiguration: imageConfig)
             expandButton.setImage(downArrow, for: .normal)
+            adjustScrollViewOnCollapse()
         }
 
+        // 새로운 높이 적용
         let newHeight = CGFloat(self.categories.count) * 44
+        self.tableView.snp.updateConstraints { make in
+            make.height.equalTo(newHeight)
+        }
+        self.layoutIfNeeded()
+
+        UIView.transition(with: tableView,
+                         duration: 0.25,
+                         options: [.transitionCrossDissolve],
+                         animations: {
+            self.tableView.reloadData()
+        }, completion: nil)
+    }
+
+    // 부드럽게 스크롤 조정
+    private func adjustScrollViewOnCollapse() {
+        guard let scrollView = self.superview?.superview as? UIScrollView else { return }
+
+        let currentContentHeight = scrollView.contentSize.height
+        let heightDifference = CGFloat(allCategories.count - maxVisibleItems) * 44
+
+        let currentOffset = scrollView.contentOffset.y
+        let newContentHeight = currentContentHeight - heightDifference
+        let maxOffset = max(0, newContentHeight - scrollView.bounds.height + scrollView.contentInset.bottom)
+
+        if currentOffset > maxOffset {
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut], animations: {
+                scrollView.contentOffset = CGPoint(x: 0, y: maxOffset)
+            }, completion: nil)
         }
     }
 }
