@@ -12,7 +12,7 @@ final class CategoryListView: BaseView {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemGray6
+        view.backgroundColor = .customWhite
         view.layer.cornerRadius = 16
         return view
     }()
@@ -34,6 +34,7 @@ final class CategoryListView: BaseView {
         let imageConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
         let downArrow = UIImage(systemName: "chevron.down", withConfiguration: imageConfig)
         button.setImage(downArrow, for: .normal)
+        button.tintColor = .fontBlack
         button.isHidden = true
         return button
     }()
@@ -51,8 +52,6 @@ final class CategoryListView: BaseView {
 
     override func configureLayout() {
         containerView.snp.makeConstraints { make in
-            make.top.horizontalEdges.equalToSuperview().inset(16)
-            make.bottom.equalToSuperview().inset(16).priority(.high)
         }
 
         tableView.snp.makeConstraints { make in
@@ -98,7 +97,6 @@ final class CategoryListView: BaseView {
 
     @objc private func toggleExpand() {
         isExpanded.toggle()
-        
         // 확장: 모든 카테고리 표시
         if isExpanded {
             categories = allCategories
@@ -107,7 +105,6 @@ final class CategoryListView: BaseView {
             let upArrow = UIImage(systemName: "chevron.up", withConfiguration: imageConfig)
             expandButton.setImage(upArrow, for: .normal)
         }
-        
         // 축소: 5개만 표시
         else {
             categories = Array(allCategories.prefix(maxVisibleItems))
@@ -117,16 +114,7 @@ final class CategoryListView: BaseView {
             expandButton.setImage(downArrow, for: .normal)
         }
 
-        tableView.reloadData()
-
-        // 레이아웃 업데이트
         let newHeight = CGFloat(self.categories.count) * 44
-        UIView.animate(withDuration: 0.3) {
-            self.tableView.snp.updateConstraints { make in
-                make.height.equalTo(newHeight)
-            }
-            self.layoutIfNeeded()
-            self.superview?.layoutIfNeeded()
         }
     }
 }

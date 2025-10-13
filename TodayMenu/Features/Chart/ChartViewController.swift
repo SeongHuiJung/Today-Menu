@@ -18,6 +18,19 @@ final class ChartViewController: BaseViewController {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let rotationAngleSubject = PublishSubject<CGFloat>()
 
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.alwaysBounceVertical = true
+        scrollView.contentInsetAdjustmentBehavior = .automatic
+        return scrollView
+    }()
+
+    private let contentView: UIView = {
+        let view = UIView()
+        return view
+    }()
+
     private let donutChartView: DonutChartView = {
         let view = DonutChartView()
         view.backgroundColor = .clear
@@ -31,18 +44,65 @@ final class ChartViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // 컨텐츠가 네비게이션 바 아래로 연장되도록 설정
+        self.edgesForExtendedLayout = [.top, .left, .right, .bottom]
+        self.extendedLayoutIncludesOpaqueBars = true
+
+        configureNavigationBar()
         bind()
         viewDidLoadSubject.onNext(())
     }
 
+
+    private func configureNavigationBar() {
+        // 네비게이션 바를 반투명하게 설정
+        navigationController?.navigationBar.isTranslucent = true
+
+        // 블러 효과 설정
+        let blur = UIBlurEffect(style: .systemMaterial)
+        let appearance = UINavigationBarAppearance()
+
+        // 완전 투명 베이스 + 블러 효과 적용
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundEffect = blur
+        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.05)
+
+        // 그림자 제거
+        appearance.shadowColor = .clear
+
+        // 타이틀 스타일
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+    }
+
     override func configureHierarchy() {
-        view.addSubview(donutChartView)
-        view.addSubview(categoryListView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        contentView.addSubview(donutChartView)
+        contentView.addSubview(categoryListView)
     }
 
     override func configureLayout() {
+        scrollView.snp.makeConstraints { make in
+            make.top.equalTo(view)
+            make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        contentView.snp.makeConstraints { make in
+            make.top.equalTo(scrollView.contentLayoutGuide).offset(0)
+            make.leading.trailing.bottom.equalTo(scrollView.contentLayoutGuide)
+            make.width.equalTo(scrollView.frameLayoutGuide)
+        }
+
         donutChartView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.top.equalToSuperview().offset(30)
             make.centerX.equalToSuperview()
             make.width.height.equalTo(300)
         }
@@ -50,8 +110,13 @@ final class ChartViewController: BaseViewController {
         categoryListView.snp.makeConstraints { make in
             make.top.equalTo(donutChartView.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview()
-            make.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide).offset(-20)
+            make.bottom.equalToSuperview().inset(20)
         }
+    }
+    
+    override func configureView() {
+        super.configureView()
+        view.backgroundColor = .pointBackground2
     }
 }
 
