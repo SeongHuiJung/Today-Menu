@@ -78,7 +78,7 @@ extension ChartViewController {
         output.categoryBreakdown
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
-                categoryListView.configure(with: data)
+                categoryListView.configure(data: data)
             })
             .disposed(by: disposeBag)
     }
