@@ -209,6 +209,9 @@ extension DonutChartView {
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard !chartData.isEmpty else { return }
 
+        // 애니메이션 진행 중에는 제스처 무시
+        guard !isAnimating else { return }
+
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         let location = gesture.location(in: self)
 
@@ -216,7 +219,6 @@ extension DonutChartView {
         case .began:
             // 시작 위치 저장
             initialSwipeLocation = location
-            layer.removeAllAnimations()
 
         case .ended, .cancelled:
             // 페이징 스크롤: 제스처 방향에 따라 다음/이전 셀로 이동
