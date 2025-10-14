@@ -13,13 +13,7 @@ final class FoodRecommendView: BaseView {
     let cardContainer = BasicView(backgroundColor: .red, cornerRadius: 10)
     private let emojiLabel = BasicLabel(text: "", alignment: .center, size: 68)
     private let titleLabel = BasicLabel(text: "", alignment: .left, size: 24, weight: .bold, textColor: .white)
-    private let chipLabel = {
-        let label = PaddingLabel(insets: UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10))
-        label.textColor = UIColor(red: 0.94, green: 0.12, blue: 0.12, alpha: 1.0)
-        label.backgroundColor = .pointBackground0
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
-        return label
-    }()
+    private let chipLabel = PaddingLabel(insets: UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10), text: "카테고리별 리뷰", alignment: .center, size: 13, backgroundColor: .pointBackground0, textColor: UIColor(red: 0.94, green: 0.12, blue: 0.12, alpha: 1.0), weight: .semibold)
     
     // 추천 버튼 (초기 상태)
     let recommendButton = {

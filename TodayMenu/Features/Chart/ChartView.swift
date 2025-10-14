@@ -37,14 +37,7 @@ final class ChartView: BaseView {
 
     let characterImage = UIImageView(image: UIImage(named: "logoCharacter"))
     
-    private let categoryReviewLabel = {
-        let label = PaddingLabel(insets: UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20))
-        label.textColor = .fontPoint0
-        label.backgroundColor = .pointBackground1
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.text = "카테고리별 리뷰"
-        return label
-    }()
+    private let categoryReviewLabel = PaddingLabel(insets: UIEdgeInsets(top: 10, left: 18, bottom: 10, right: 18), text: "카테고리별 리뷰", alignment: .center, size: 14, backgroundColor: .pointBackground1, textColor: .fontPoint0 , weight: .semibold, cornerRadius: 20)
     
     let donutChartView: DonutChartView = {
         let view = DonutChartView()
@@ -97,7 +90,7 @@ final class ChartView: BaseView {
         }
         
         donutChartView.snp.makeConstraints { make in
-            make.top.equalTo(categoryReviewLabel.snp.bottom).offset(12)
+            make.top.equalTo(categoryReviewLabel.snp.bottom).offset(44)
             make.centerX.equalToSuperview()
             make.width.height.equalTo(250)
         }

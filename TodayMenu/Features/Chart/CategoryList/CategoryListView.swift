@@ -34,7 +34,7 @@ final class CategoryListView: BaseView {
         let imageConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
         let downArrow = UIImage(systemName: "chevron.down", withConfiguration: imageConfig)
         button.setImage(downArrow, for: .normal)
-        button.tintColor = .fontBlack
+        button.tintColor = .fontPoint0
         button.isHidden = true
         return button
     }()

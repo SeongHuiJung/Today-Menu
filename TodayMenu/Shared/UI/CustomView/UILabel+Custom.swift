@@ -17,10 +17,17 @@ final class PaddingLabel: UILabel {
     
     required init?(coder: NSCoder) { fatalError() }
     
-    init(insets: UIEdgeInsets) {
+    init(insets: UIEdgeInsets, text: String, alignment: NSTextAlignment, size: CGFloat, backgroundColor: UIColor, textColor: UIColor = .black, weight: UIFont.Weight = .regular, cornerRadius: CGFloat = 14) {
         self.insets = insets
         super.init(frame: .zero)
-        self.layer.cornerRadius = 14
+        
+        self.text = text
+        self.textColor = textColor
+        self.backgroundColor = backgroundColor
+        self.textAlignment = alignment
+        self.font = .systemFont(ofSize: size, weight: weight)
+        
+        self.layer.cornerRadius = cornerRadius
         self.clipsToBounds = true
     }
 

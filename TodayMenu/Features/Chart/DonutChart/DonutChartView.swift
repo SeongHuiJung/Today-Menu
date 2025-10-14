@@ -156,11 +156,9 @@ extension DonutChartView {
 
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         let radius = min(bounds.width, bounds.height) / 2 - 20
-        let innerRadius = radius * 0.6
-
         var accumulatedAngle: CGFloat = currentRotation - CGFloat.pi / 2
 
-        for (_, data) in chartData.enumerated() {
+        for (index, data) in chartData.enumerated() {
             let segmentAngle = 2 * CGFloat.pi * CGFloat(data.percentage)
             let midAngle = accumulatedAngle + segmentAngle / 2
 
@@ -168,40 +166,42 @@ extension DonutChartView {
             let percentageText = String(format: "%.0f%%", data.percentage * 100)
             let labelText = "\(data.label) \(percentageText)"
 
-            let label = UILabel()
-            label.text = labelText
-            label.font = .systemFont(ofSize: 14, weight: .semibold)
-            label.textColor = .label
-            label.textAlignment = .center
-            label.sizeToFit()
+            // baseColor 계산
+            let baseColor = colors[index % colors.count]
 
-            // 셀이 작으면 바깥쪽에 배치
-            let minPercentageForInside: Double = 0.15 // 15% 이상이면 안쪽
-            let labelRadius: CGFloat
-
-            if data.percentage >= minPercentageForInside {
-                // 셀 안쪽 (도넛 중간)
-                labelRadius = (radius + innerRadius) / 2
+            // baseColor에 따라 텍스트 색상 결정
+            let textColor: UIColor
+            if baseColor == .point0 || baseColor == .point1 {
+                textColor = .fontWhite
+            } else if baseColor == .point2 {
+                textColor = .fontPoint2
+            } else if baseColor == .point3 {
+                textColor = .fontPoint3
+            } else if baseColor == .point4 {
+                textColor = .fontPoint4
             } else {
-                // 셀 바깥쪽
-                labelRadius = radius + 40
+                textColor = .label
             }
+
+            let categoryLabel = PaddingLabel(insets: UIEdgeInsets(top: 5, left: 9, bottom: 5, right: 9), text: labelText, alignment: .center, size: 12, backgroundColor: baseColor, textColor: textColor, weight: .bold ,cornerRadius: 12)
+
+            let labelRadius: CGFloat = radius + 30
 
             // 레이블 위치 계산
             let labelX = center.x + labelRadius * cos(midAngle)
             let labelY = center.y + labelRadius * sin(midAngle)
 
-            // frame을 사용하여 레이아웃 사이클 방지
-            let labelSize = label.bounds.size
-            label.frame = CGRect(
+            // intrinsicContentSize를 사용하여 올바른 크기 계산
+            let labelSize = categoryLabel.intrinsicContentSize
+            categoryLabel.frame = CGRect(
                 x: labelX - labelSize.width / 2,
                 y: labelY - labelSize.height / 2,
                 width: labelSize.width,
                 height: labelSize.height
             )
 
-            addSubview(label)
-            labelViews.append(label)
+            addSubview(categoryLabel)
+            labelViews.append(categoryLabel)
 
             accumulatedAngle += segmentAngle
         }
