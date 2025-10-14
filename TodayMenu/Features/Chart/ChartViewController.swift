@@ -28,36 +28,9 @@ final class ChartViewController: BaseViewController {
         self.extendedLayoutIncludesOpaqueBars = true
 
         configureNavigationBar()
+        setupScrollViewDelegate()
         bind()
         viewDidLoadSubject.onNext(())
-    }
-
-
-    private func configureNavigationBar() {
-        // 네비게이션 바를 반투명하게 설정
-        navigationController?.navigationBar.isTranslucent = true
-
-        // 블러 효과 설정
-        let blur = UIBlurEffect(style: .systemMaterial)
-        let appearance = UINavigationBarAppearance()
-
-        // 완전 투명 베이스 + 블러 효과 적용
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundEffect = blur
-        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.05)
-
-        // 그림자 제거
-        appearance.shadowColor = .clear
-
-        // 타이틀 스타일
-        appearance.titleTextAttributes = [
-            .foregroundColor: UIColor.label,
-            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
-        ]
-
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
     }
 
     override func configureHierarchy() {
@@ -102,5 +75,51 @@ extension ChartViewController {
                 chartView.categoryListView.configure(data: data)
             })
             .disposed(by: disposeBag)
+    }
+}
+
+// MARK: - NavigationBar
+extension ChartViewController {
+    private func setupScrollViewDelegate() {
+        chartView.scrollView.delegate = self
+    }
+
+    private func configureNavigationBar() {
+        // 네비게이션 바를 반투명하게 설정
+        navigationController?.navigationBar.isTranslucent = true
+
+        // 블러 효과 설정
+        let blur = UIBlurEffect(style: .systemMaterial)
+        let appearance = UINavigationBarAppearance()
+
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundEffect = blur
+        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.05)
+        appearance.shadowColor = .clear
+
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+
+        // 초기에는 네비게이션 바를 완전히 투명하게 설정
+        navigationController?.navigationBar.alpha = 0
+    }
+
+    private func updateNavigationBarAlpha(for scrollView: UIScrollView) {
+        // 스크롤 오프셋을 기준으로 투명도 계산
+        let offset = scrollView.contentOffset.y
+        let threshold: CGFloat = 100.0 // 이 값을 조절하여 페이드 인 속도 조절
+
+        // 0에서 1 사이의 alpha 값 계산
+        let alpha = min(max(offset / threshold, 0), 1)
+
+        navigationController?.navigationBar.alpha = alpha
+    }
+}
+
+// MARK: - UIScrollViewDelegate
+extension ChartViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        updateNavigationBarAlpha(for: scrollView)
     }
 }
