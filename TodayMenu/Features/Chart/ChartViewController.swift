@@ -18,29 +18,7 @@ final class ChartViewController: BaseViewController {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let rotationAngleSubject = PublishSubject<CGFloat>()
 
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.showsVerticalScrollIndicator = true
-        scrollView.alwaysBounceVertical = true
-        scrollView.contentInsetAdjustmentBehavior = .automatic
-        return scrollView
-    }()
-
-    private let contentView: UIView = {
-        let view = UIView()
-        return view
-    }()
-
-    private let donutChartView: DonutChartView = {
-        let view = DonutChartView()
-        view.backgroundColor = .clear
-        return view
-    }()
-
-    private let categoryListView: CategoryListView = {
-        let view = CategoryListView()
-        return view
-    }()
+    private let chartView = ChartView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -83,40 +61,18 @@ final class ChartViewController: BaseViewController {
     }
 
     override func configureHierarchy() {
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        contentView.addSubview(donutChartView)
-        contentView.addSubview(categoryListView)
+        view.addSubview(chartView)
     }
 
     override func configureLayout() {
-        scrollView.snp.makeConstraints { make in
+        chartView.snp.makeConstraints { make in
             make.top.equalTo(view)
-            make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
-        }
-
-        contentView.snp.makeConstraints { make in
-            make.top.equalTo(scrollView.contentLayoutGuide).offset(0)
-            make.leading.trailing.bottom.equalTo(scrollView.contentLayoutGuide)
-            make.width.equalTo(scrollView.frameLayoutGuide)
-        }
-
-        donutChartView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(30)
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(300)
-        }
-
-        categoryListView.snp.makeConstraints { make in
-            make.top.equalTo(donutChartView.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().inset(20)
+            make.leading.trailing.bottom.equalToSuperview()
         }
     }
-    
+
     override func configureView() {
         super.configureView()
-        view.backgroundColor = .pointBackground2
     }
 }
 
@@ -126,7 +82,7 @@ extension ChartViewController {
         let input = ChartViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
             rotationAngle: rotationAngleSubject.asObservable(),
-            selectedCuisine: donutChartView.selectedCuisine
+            selectedCuisine: chartView.donutChartView.selectedCuisine
         )
 
         let output = viewModel.transform(input: input)
@@ -135,7 +91,7 @@ extension ChartViewController {
         output.categoryReviewChartData
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
-                donutChartView.configure(with: data)
+                chartView.donutChartView.configure(with: data)
             })
             .disposed(by: disposeBag)
 
@@ -143,7 +99,7 @@ extension ChartViewController {
         output.categoryBreakdown
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
-                categoryListView.configure(data: data)
+                chartView.categoryListView.configure(data: data)
             })
             .disposed(by: disposeBag)
     }
