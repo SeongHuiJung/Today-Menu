@@ -117,7 +117,7 @@ final class CalendarViewController: BaseViewController {
         button.setTitle("달력 전체보기", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
-        button.backgroundColor = .point2
+        button.backgroundColor = .mainPoint
         button.layer.cornerRadius = 18
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 2)

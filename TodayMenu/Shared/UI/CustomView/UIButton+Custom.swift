@@ -150,11 +150,11 @@ class TagButton: UIButton {
     private func updateAppearance() {
         var config = configuration
         if isSelected {
-            config?.baseBackgroundColor = .point2
+            config?.baseBackgroundColor = .mainPoint
             config?.baseForegroundColor = .white
         } else {
             config?.baseBackgroundColor = UIColor(red: 1.0, green: 0.95, blue: 0.95, alpha: 1.0)
-            config?.baseForegroundColor = .point2
+            config?.baseForegroundColor = .mainPoint
         }
         configuration = config
     }

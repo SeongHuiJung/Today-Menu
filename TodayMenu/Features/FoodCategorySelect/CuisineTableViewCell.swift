@@ -20,7 +20,7 @@ final class CuisineTableViewCell: BaseTableViewCell {
 
     private let selectionIndicator = {
         let view = UIView()
-        view.backgroundColor = UIColor.point2
+        view.backgroundColor = UIColor.mainPoint
         view.isHidden = true
         return view
     }()
@@ -51,9 +51,9 @@ final class CuisineTableViewCell: BaseTableViewCell {
 
     func configure(title: String, isSelected: Bool) {
         titleLabel.text = title
-        titleLabel.textColor = isSelected ? UIColor.point2 : .darkGray
+        titleLabel.textColor = isSelected ? UIColor.mainPoint : .darkGray
         titleLabel.font = isSelected ? .systemFont(ofSize: FontSize.context, weight: .bold) : .systemFont(ofSize: FontSize.context, weight: .medium)
         selectionIndicator.isHidden = !isSelected
-        backgroundColor = isSelected ? UIColor.point2.withAlphaComponent(0.15) : .white
+        backgroundColor = isSelected ? UIColor.mainPoint.withAlphaComponent(0.15) : .white
     }
 }

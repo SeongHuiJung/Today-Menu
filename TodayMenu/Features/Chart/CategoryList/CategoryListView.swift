@@ -12,7 +12,7 @@ final class CategoryListView: BaseView {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .customWhite
+        view.backgroundColor = .pointBackground0
         view.layer.cornerRadius = 16
         return view
     }()
@@ -164,7 +164,7 @@ extension CategoryListView: UITableViewDataSource {
             return UITableViewCell()
         }
 
-        cell.configure(with: categories[indexPath.row])
+        cell.configure(with: categories[indexPath.row], index: indexPath.row)
         return cell
     }
 }

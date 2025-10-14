@@ -60,7 +60,7 @@ final class CustomPhotoGalleryViewController: BaseViewController {
         let button = UIButton(type: .system)
         button.setTitle("선택", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
-        button.setTitleColor(.point2, for: .normal)
+        button.setTitleColor(.mainPoint, for: .normal)
         button.setTitleColor(.systemGray3, for: .disabled)
         button.isEnabled = false
         return button
@@ -82,7 +82,7 @@ final class CustomPhotoGalleryViewController: BaseViewController {
         return label
     }()
     
-    private let settingButton = RadiusButton(title: "사진 접근 권한 허용하기", size: 13, textColor: .point2, backgroundColor: .customGray1, cornerRadius: 15)
+    private let settingButton = RadiusButton(title: "사진 접근 권한 허용하기", size: 13, textColor: .mainPoint, backgroundColor: .customGray1, cornerRadius: 15)
     
     init(existingPhotoCount: Int) {
         self.existingCount = existingPhotoCount

@@ -137,10 +137,10 @@ final class MakeFoodReviewView: BaseView {
     // 선택된 식당 정보 뷰
     let selectedRestaurantView = {
         let view = UIView()
-        view.backgroundColor = UIColor.point2.withAlphaComponent(0.1)
+        view.backgroundColor = UIColor.mainPoint.withAlphaComponent(0.1)
         view.layer.cornerRadius = 12
         view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.point2.cgColor
+        view.layer.borderColor = UIColor.mainPoint.cgColor
         view.isHidden = true
         return view
     }()
@@ -163,7 +163,7 @@ final class MakeFoodReviewView: BaseView {
     let removeRestaurantButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        button.tintColor = UIColor.point2
+        button.tintColor = UIColor.mainPoint
         return button
     }()
     
@@ -192,7 +192,7 @@ final class MakeFoodReviewView: BaseView {
     
     let saveButton = {
         let button = UIButton(type: .system)
-        button.backgroundColor = UIColor.point2
+        button.backgroundColor = UIColor.mainPoint
         button.setTitle("작성 완료", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: FontSize.subTitle, weight: .semibold)
@@ -524,7 +524,7 @@ extension MakeFoodReviewView {
     func updateCategoryButtonTitle(_ title: String) {
         categorySettingButton.setTitle(title, for: .normal)
         categorySettingButton.setTitleColor(.black, for: .normal)
-        categorySettingButton.layer.borderColor = UIColor.point2.cgColor
+        categorySettingButton.layer.borderColor = UIColor.mainPoint.cgColor
     }
 
     func showSelectedRestaurant(_ restaurant: RestaurantData) {

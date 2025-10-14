@@ -12,7 +12,7 @@ final class CategoryCell: BaseTableViewCell {
     
     private let paddingView = {
         let view = UIView()
-        view.backgroundColor = .point1
+        view.backgroundColor = .mainPoint
         view.layer.cornerRadius = 15
         view.clipsToBounds = true
         return view
@@ -56,9 +56,28 @@ final class CategoryCell: BaseTableViewCell {
         selectionStyle = .none
     }
 
-    func configure(with data: CategoryCellDataModel) {
+    func configure(with data: CategoryCellDataModel, index: Int) {
         nameLabel.text = data.name
         percentageLabel.text = String(format: "%.0f%%", data.percentage * 100)
         countLabel.text = "\(data.count)회"
+
+        let backgroundColors: [UIColor] = [.point0, .point1, .point2, .point3, .point4]
+        paddingView.backgroundColor = index < 5 ? backgroundColors[index] : .point4
+
+        let fontColor: UIColor
+        switch index {
+        case 0, 1:
+            fontColor = .fontWhite
+        case 2:
+            fontColor = .fontPoint2
+        case 3:
+            fontColor = .fontPoint3
+        default:
+            fontColor = .fontPoint4
+        }
+
+        nameLabel.textColor = fontColor
+        percentageLabel.textColor = fontColor
+        countLabel.textColor = fontColor
     }
 }

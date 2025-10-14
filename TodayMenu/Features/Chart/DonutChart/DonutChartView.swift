@@ -30,7 +30,8 @@ final class DonutChartView: UIView {
         .point0,
         .point1,
         .point2,
-        .point3
+        .point3,
+        .point4
     ]
 
     // 선택 위치: 하단 중앙 (270도 = 3π/2)
@@ -391,7 +392,7 @@ extension DonutChartView {
             let baseColor = colors[index % colors.count]
             if index == selectedIndex {
                 shapeLayer.fillColor = baseColor.withAlphaComponent(1.0).cgColor
-                shapeLayer.shadowColor = UIColor.point1.cgColor
+                shapeLayer.shadowColor = UIColor.mainPoint.cgColor
                 shapeLayer.shadowOffset = CGSize(width: 0, height: 0)
                 shapeLayer.shadowOpacity = 0.8
                 shapeLayer.shadowRadius = 6

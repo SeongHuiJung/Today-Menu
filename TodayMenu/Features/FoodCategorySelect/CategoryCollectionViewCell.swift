@@ -46,10 +46,10 @@ final class CategoryCollectionViewCell: BaseCollectionViewCell {
         titleLabel.text = title
 
         if isSelected {
-            containerView.backgroundColor = UIColor.point2.withAlphaComponent(0.15)
-            containerView.layer.borderColor = UIColor.point2.cgColor
+            containerView.backgroundColor = UIColor.mainPoint.withAlphaComponent(0.15)
+            containerView.layer.borderColor = UIColor.mainPoint.cgColor
             containerView.layer.borderWidth = 2
-            titleLabel.textColor = UIColor.point2
+            titleLabel.textColor = UIColor.mainPoint
             titleLabel.font = .systemFont(ofSize: FontSize.context, weight: .bold)
         } else {
             containerView.backgroundColor = .white

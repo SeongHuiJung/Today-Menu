@@ -32,7 +32,7 @@ final class FoodMapView: BaseView {
     let locationButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .white
-        button.tintColor = .point2
+        button.tintColor = .mainPoint
         button.layer.cornerRadius = 28
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 2)

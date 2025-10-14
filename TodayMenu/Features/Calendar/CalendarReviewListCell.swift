@@ -157,7 +157,7 @@ final class CalendarReviewListCell: BaseTableViewCell {
         for i in 0..<5 {
             let starImageView = UIImageView()
             starImageView.contentMode = .scaleAspectFit
-            starImageView.tintColor = i < rating ? .point2 : .systemGray4
+            starImageView.tintColor = i < rating ? .mainPoint : .systemGray4
             starImageView.image = UIImage(systemName: i < rating ? "star.fill" : "star")
             starStackView.addArrangedSubview(starImageView)
             

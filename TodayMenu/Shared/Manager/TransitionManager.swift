@@ -17,10 +17,10 @@ class TransitionManager {
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithOpaqueBackground()
         tabBarAppearance.backgroundColor = .customWhite
-        tabBarAppearance.stackedLayoutAppearance.selected.iconColor = .point2
+        tabBarAppearance.stackedLayoutAppearance.selected.iconColor = .mainPoint
         tabBarAppearance.stackedLayoutAppearance.normal.iconColor = .customGray3
         tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.customGray3]
-        tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.point2]
+        tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.mainPoint]
         
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance

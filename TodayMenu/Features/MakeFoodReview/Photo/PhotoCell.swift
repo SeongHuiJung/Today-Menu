@@ -27,7 +27,7 @@ final class PhotoCell: BaseCollectionViewCell {
     
     private let selectionBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = .point2
+        view.backgroundColor = .mainPoint
         view.layer.cornerRadius = 12
         view.isHidden = true
         return view

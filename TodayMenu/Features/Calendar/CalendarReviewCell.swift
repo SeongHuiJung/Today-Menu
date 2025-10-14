@@ -22,7 +22,7 @@ final class CalendarReviewCell: FSCalendarCell {
     
     private let badgeView = {
         let view = UIView()
-        view.backgroundColor = UIColor.point2
+        view.backgroundColor = UIColor.mainPoint
         view.isHidden = true
         return view
     }()
@@ -38,7 +38,7 @@ final class CalendarReviewCell: FSCalendarCell {
     private let foodNameLabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11, weight: .medium)
-        label.textColor = UIColor.point2
+        label.textColor = UIColor.mainPoint
         label.textAlignment = .center
         label.numberOfLines = 1
         return label
@@ -55,7 +55,7 @@ final class CalendarReviewCell: FSCalendarCell {
     private let backgroundColorView = {
         let view = UIView()
         view.backgroundColor = UIColor.pointBackground
-        view.layer.borderColor = UIColor.point0.cgColor
+        view.layer.borderColor = UIColor.calendarCellBackground.cgColor
         view.layer.borderWidth = 1
         view.layer.cornerRadius = 12
         
@@ -146,13 +146,13 @@ final class CalendarReviewCell: FSCalendarCell {
             } else {
                 // 이미지 로드 실패 시 기본 아이콘
                 foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
-                foodImageView.tintColor = UIColor.point1
+                foodImageView.tintColor = UIColor.symbol
                 foodImageView.contentMode = .scaleAspectFit
             }
         } else {
             // 사진이 없으면 기본 아이콘
             foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
-            foodImageView.tintColor = UIColor.point1
+            foodImageView.tintColor = UIColor.symbol
             foodImageView.contentMode = .scaleAspectFit
         }
         
