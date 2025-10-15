@@ -83,6 +83,14 @@ extension ChartViewController {
                 chartView.categoryListView.updateCuisineLabel(with: cuisineName)
             })
             .disposed(by: disposeBag)
+
+        // 데이터 존재 여부에 따라 UI 업데이트
+        output.hasData
+            .drive(onNext: { [weak self] hasData in
+                guard let self else { return }
+                chartView.updateUIForDataState(hasData: hasData)
+            })
+            .disposed(by: disposeBag)
     }
 }
 

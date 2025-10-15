@@ -32,10 +32,15 @@ final class ChartView: BaseView {
         view.clipsToBounds = true
         return view
     }()
-    
-    let headerLabel = BasicLabel(text: "모모찌가 분석한\n음식 리포트에요!", alignment: .left, size: 20, weight: .bold, textColor: .fontPoint0)
+
+    let headerLabel = BasicLabel(text: "모모찌가 분석한 음식 리포트에요!", alignment: .left, size: 20, weight: .bold, textColor: .fontPoint0)
 
     let characterImage = UIImageView(image: UIImage(named: "logoCharacter"))
+    
+    private let emptyPadding = UIImageView(image: UIImage(named: "emptyPadding"))
+    private let warningIcon = UIImageView(image: UIImage(named: "warning"))
+    private let emptyInfoLabel = BasicLabel(text: "앗, 아직 음식리뷰가 없네요", alignment: .center, size: 16, weight: .semibold, textColor: .fontPoint1)
+    private let emptyDescriptionLabel = BasicLabel(text: "리뷰를 작성하면 통계를 확인할 수 있어요.", alignment: .center, size: 14, textColor: .fontPoint5)
     
     private let categoryReviewLabel = PaddingLabel(insets: UIEdgeInsets(top: 10, left: 18, bottom: 10, right: 18), text: "카테고리별 리뷰", alignment: .center, size: 14, backgroundColor: .pointBackground1, textColor: .fontPoint0 , weight: .semibold, cornerRadius: 20)
     
@@ -51,13 +56,37 @@ final class ChartView: BaseView {
     }()
 
     override func configureHierarchy() {
-        addSubview(scrollView)
+        [scrollView, emptyPadding].forEach { self.addSubview($0) }
         scrollView.addSubview(contentView)
         [headerPadding, characterImage, categoryReviewLabel, donutChartView, categoryListView].forEach { contentView.addSubview($0) }
         headerPadding.addSubview(headerLabel)
+        [warningIcon, emptyInfoLabel, emptyDescriptionLabel].forEach { emptyPadding.addSubview($0) }
     }
 
     override func configureLayout() {
+
+        emptyPadding.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(24)
+        }
+
+        warningIcon.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().inset(28)
+            make.width.equalTo(35)
+            make.height.equalTo(33)
+        }
+        
+        emptyInfoLabel.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.top.equalTo(warningIcon.snp.bottom).offset(20)
+        }
+        
+        emptyDescriptionLabel.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().inset(36)
+        }
+        
         scrollView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.bottom.equalTo(safeAreaLayoutGuide)
@@ -76,6 +105,7 @@ final class ChartView: BaseView {
 
         headerLabel.snp.makeConstraints { make in
             make.verticalEdges.leading.equalToSuperview().inset(16)
+            make.right.equalTo(characterImage.snp.left).offset(-16)
         }
         
         characterImage.snp.makeConstraints { make in
@@ -104,5 +134,20 @@ final class ChartView: BaseView {
 
     override func configureView() {
         super.configureView()
+    }
+
+    func updateUIForDataState(hasData: Bool) {
+        if hasData {
+            scrollView.isHidden = false
+            headerPadding.isHidden = false
+            characterImage.isHidden = false
+            categoryReviewLabel.isHidden = false
+            donutChartView.isHidden = false
+            categoryListView.isHidden = false
+            emptyPadding.isHidden = true
+        } else {
+            scrollView.isHidden = true
+            emptyPadding.isHidden = false
+        }
     }
 }

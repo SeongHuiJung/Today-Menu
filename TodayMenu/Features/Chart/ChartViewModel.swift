@@ -26,6 +26,7 @@ final class ChartViewModel {
         let currentRotation: Driver<CGFloat>
         let categoryData: Driver<[CategoryCellDataModel]>
         let selectedCuisineDisplayName: Driver<String>
+        let hasData: Driver<Bool>
     }
 
     func transform(input: Input) -> Output {
@@ -56,11 +57,16 @@ final class ChartViewModel {
             }
             .asDriver(onErrorJustReturn: "")
 
+        // 데이터 존재 여부 확인
+        let hasData = categoryReviewChartData
+            .map { !$0.isEmpty }
+
         return Output(
             categoryReviewChartData: categoryReviewChartData,
             currentRotation: currentRotation,
             categoryData: categoryData,
-            selectedCuisineDisplayName: selectedCuisineDisplayName
+            selectedCuisineDisplayName: selectedCuisineDisplayName,
+            hasData: hasData
         )
     }
 
