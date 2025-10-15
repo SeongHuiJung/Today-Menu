@@ -12,6 +12,7 @@ import RxCocoa
 final class DonutChartView: UIView {
 
     private var segmentLayers: [CAShapeLayer] = []
+    private var centerCircleLayer: CAShapeLayer?
     private var chartData: [DonutChartDataModel] = []
     private var currentRotation: CGFloat = 0
     private var selectedIndex: Int = 0
@@ -54,6 +55,19 @@ final class DonutChartView: UIView {
         addGestureRecognizer(panGesture)
     }
 
+    private func cleanupLayers() {
+        // 레이블 먼저 제거
+        hideLabels()
+
+        // 차트 레이어 안전하게 제거
+        segmentLayers.forEach { $0.removeFromSuperlayer() }
+        segmentLayers.removeAll()
+
+        // 중앙 원 레이어 제거
+        centerCircleLayer?.removeFromSuperlayer()
+        centerCircleLayer = nil
+    }
+
     func configure(with data: [DonutChartDataModel]) {
         self.chartData = data
 
@@ -71,8 +85,24 @@ final class DonutChartView: UIView {
         // 첫 번째 셀이 하단 중앙(π/2)에 오도록 회전 각도 설정
         currentRotation = CGFloat.pi - firstCenterAngle
 
-        // 레이아웃이 완료된 후 차트와 레이블 표시
-        setNeedsLayout()
+        // 레이아웃이 완료된 경우 즉시 차트 업데이트 (메인 스레드에서)
+        if bounds.width > 0 && bounds.height > 0 {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.cleanupLayers()
+                self.drawChart()
+                self.showLabels()
+
+                // 선택된 cuisine 방출
+                if self.selectedIndex >= 0 && self.selectedIndex < self.chartData.count {
+                    self.selectedCuisineSubject.onNext(self.chartData[self.selectedIndex].rawValue)
+                }
+            }
+        } else {
+            // 레이아웃이 아직 완료되지 않은 경우, layoutSubviews에서 그리도록 플래그 리셋
+            hasDrawnInitialChart = false
+            setNeedsLayout()
+        }
     }
 
     override func layoutSubviews() {
@@ -306,12 +336,12 @@ extension DonutChartView {
         return currentAngle + delta
     }
 
-    
+
     private func drawChart() {
         guard !chartData.isEmpty else { return }
 
-        // 기존 레이어 모두 제거
-        layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+        // 기존 차트 레이어만 안전하게 제거 (레이블 레이어는 유지)
+        segmentLayers.forEach { $0.removeFromSuperlayer() }
         segmentLayers.removeAll()
 
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
@@ -410,8 +440,11 @@ extension DonutChartView {
             currentAngle = endAngle
         }
 
-        // 중앙 원 (도넛 홀)
-        let centerCircle = CAShapeLayer()
+        // 중앙 원 (도넛 홀) - 프로퍼티로 관리
+        if centerCircleLayer == nil {
+            centerCircleLayer = CAShapeLayer()
+        }
+
         let centerPath = UIBezierPath(
             arcCenter: center,
             radius: innerRadius,
@@ -419,8 +452,11 @@ extension DonutChartView {
             endAngle: 2 * CGFloat.pi,
             clockwise: true
         )
-        centerCircle.path = centerPath.cgPath
-        centerCircle.fillColor = UIColor.systemBackground.cgColor
-        layer.addSublayer(centerCircle)
+        centerCircleLayer?.path = centerPath.cgPath
+        centerCircleLayer?.fillColor = UIColor.systemBackground.cgColor
+
+        if centerCircleLayer?.superlayer == nil {
+            layer.addSublayer(centerCircleLayer!)
+        }
     }
 }

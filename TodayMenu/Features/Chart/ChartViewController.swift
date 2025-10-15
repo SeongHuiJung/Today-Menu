@@ -16,6 +16,7 @@ final class ChartViewController: BaseViewController {
     private let disposeBag = DisposeBag()
 
     private let viewDidLoadSubject = PublishSubject<Void>()
+    private let viewWillAppearSubject = PublishSubject<Void>()
     private let rotationAngleSubject = PublishSubject<CGFloat>()
 
     private let chartView = ChartView()
@@ -31,6 +32,13 @@ final class ChartViewController: BaseViewController {
         setupScrollViewDelegate()
         bind()
         viewDidLoadSubject.onNext(())
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // 화면이 나타날 때마다 데이터 업데이트
+        viewWillAppearSubject.onNext(())
     }
 
     override func configureHierarchy() {
@@ -54,6 +62,7 @@ extension ChartViewController {
     private func bind() {
         let input = ChartViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
+            viewWillAppear: viewWillAppearSubject.asObservable(),
             rotationAngle: rotationAngleSubject.asObservable(),
             selectedCuisine: chartView.donutChartView.selectedCuisine
         )

@@ -17,6 +17,7 @@ final class ChartViewModel {
 
     struct Input {
         let viewDidLoad: Observable<Void>
+        let viewWillAppear: Observable<Void>
         let rotationAngle: Observable<CGFloat>
         let selectedCuisine: Observable<String>
     }
@@ -32,12 +33,15 @@ final class ChartViewModel {
     func transform(input: Input) -> Output {
 
         // FoodReview 테이블의 대분류(cuisine) 칼럼을 기준으로 차트 생성
-        let categoryReviewChartData = input.viewDidLoad
-            .map { [weak self] _ -> [DonutChartDataModel] in
-                guard let self = self else { return [] }
-                return self.getCategoryReviewChartData()
-            }
-            .asDriver(onErrorJustReturn: [])
+        let categoryReviewChartData = Observable.merge(
+            input.viewDidLoad,
+            input.viewWillAppear
+        )
+        .map { [weak self] _ -> [DonutChartDataModel] in
+            guard let self = self else { return [] }
+            return self.getCategoryReviewChartData()
+        }
+        .asDriver(onErrorJustReturn: [])
 
         let currentRotation = input.rotationAngle
             .asDriver(onErrorJustReturn: 0)
