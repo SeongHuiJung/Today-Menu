@@ -80,9 +80,19 @@ final class CategoryListView: BaseView {
         // 초기 상태에는 최대 5개까지만 표기
         self.isExpanded = false
         self.categories = Array(data.prefix(maxVisibleItems))
-        
+
         // 5개 초과일 때만 더보기 버튼 표시
-        expandButton.isHidden = data.count <= maxVisibleItems
+        let shouldShowExpandButton = data.count > maxVisibleItems
+        expandButton.isHidden = !shouldShowExpandButton
+
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+        let downArrow = UIImage(systemName: "chevron.down", withConfiguration: imageConfig)
+        expandButton.setImage(downArrow, for: .normal)
+
+        // expandButton 높이 조정
+        expandButton.snp.updateConstraints { make in
+            make.height.equalTo(shouldShowExpandButton ? 36 : 0)
+        }
 
         updateLayout()
     }
