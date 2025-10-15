@@ -52,11 +52,12 @@ final class CategoryListView: BaseView {
 
     override func configureLayout() {
         containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(16)
+            make.edges.equalToSuperview().inset(24)
         }
 
         tableView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview().inset(12)
+            make.top.equalToSuperview().inset(56)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(220) // 초기 높이 (5개 * 44)
         }
 

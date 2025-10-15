@@ -32,16 +32,16 @@ final class CategoryCell: BaseTableViewCell {
     override func configureLayout() {
         paddingView.snp.makeConstraints { make in
             make.horizontalEdges.top.equalToSuperview()
-            make.bottom.top.equalToSuperview().inset(10)
+            make.bottom.equalToSuperview().inset(10)
         }
         
         nameLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(20)
+            make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
         }
 
         countLabel.snp.makeConstraints { make in
-            make.right.equalToSuperview().inset(20)
+            make.right.equalToSuperview().inset(16)
             make.centerY.equalToSuperview()
         }
 
