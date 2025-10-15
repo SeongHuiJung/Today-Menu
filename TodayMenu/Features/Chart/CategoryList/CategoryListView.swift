@@ -16,6 +16,8 @@ final class CategoryListView: BaseView {
         view.layer.cornerRadius = 16
         return view
     }()
+    
+    private let cuisineCategoryLabel = BasicLabel(text: "", alignment: .left, size: 20, weight: .bold, textColor: .fontPoint0)
 
     private lazy var tableView: UITableView = {
         let table = UITableView()
@@ -48,6 +50,7 @@ final class CategoryListView: BaseView {
         addSubview(containerView)
         containerView.addSubview(tableView)
         containerView.addSubview(expandButton)
+        containerView.addSubview(cuisineCategoryLabel)
     }
 
     override func configureLayout() {
@@ -55,6 +58,10 @@ final class CategoryListView: BaseView {
             make.edges.equalToSuperview().inset(24)
         }
 
+        cuisineCategoryLabel.snp.makeConstraints { make in
+            make.top.left.equalToSuperview().inset(20)
+        }
+        
         tableView.snp.makeConstraints { make in
             make.top.equalToSuperview().inset(56)
             make.horizontalEdges.equalToSuperview().inset(20)
@@ -96,6 +103,10 @@ final class CategoryListView: BaseView {
         }
 
         updateLayout()
+    }
+
+    func updateCuisineLabel(with cuisineName: String) {
+        cuisineCategoryLabel.text = cuisineName
     }
 
     private func updateLayout() {

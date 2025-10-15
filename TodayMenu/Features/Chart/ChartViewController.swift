@@ -69,10 +69,18 @@ extension ChartViewController {
             .disposed(by: disposeBag)
 
         // 카테고리 리스트 바인딩
-        output.categoryBreakdown
+        output.categoryData
             .drive(onNext: { [weak self] data in
                 guard let self else { return }
                 chartView.categoryListView.configure(data: data)
+            })
+            .disposed(by: disposeBag)
+
+        // cuisine 라벨 바인딩
+        output.selectedCuisineDisplayName
+            .drive(onNext: { [weak self] cuisineName in
+                guard let self else { return }
+                chartView.categoryListView.updateCuisineLabel(with: cuisineName)
             })
             .disposed(by: disposeBag)
     }

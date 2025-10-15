@@ -24,7 +24,8 @@ final class ChartViewModel {
     struct Output {
         let categoryReviewChartData: Driver<[DonutChartDataModel]>
         let currentRotation: Driver<CGFloat>
-        let categoryBreakdown: Driver<[CategoryCellDataModel]>
+        let categoryData: Driver<[CategoryCellDataModel]>
+        let selectedCuisineDisplayName: Driver<String>
     }
 
     func transform(input: Input) -> Output {
@@ -41,17 +42,25 @@ final class ChartViewModel {
             .asDriver(onErrorJustReturn: 0)
 
         // 선택된 cuisine에 따라 중분류(category) 데이터 생성
-        let categoryBreakdown = input.selectedCuisine
+        let categoryData = input.selectedCuisine
             .map { [weak self] cuisine -> [CategoryCellDataModel] in
                 guard let self = self else { return [] }
                 return getCategoryDataByCuisine(cuisine: cuisine)
             }
             .asDriver(onErrorJustReturn: [])
 
+        // 선택된 cuisine의 displayName 생성
+        let selectedCuisineDisplayName = input.selectedCuisine
+            .map { cuisine -> String in
+                return Cuisine(rawValue: cuisine)?.displayName ?? cuisine
+            }
+            .asDriver(onErrorJustReturn: "")
+
         return Output(
             categoryReviewChartData: categoryReviewChartData,
             currentRotation: currentRotation,
-            categoryBreakdown: categoryBreakdown
+            categoryData: categoryData,
+            selectedCuisineDisplayName: selectedCuisineDisplayName
         )
     }
 
