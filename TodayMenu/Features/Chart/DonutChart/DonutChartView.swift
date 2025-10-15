@@ -77,6 +77,7 @@ final class DonutChartView: UIView {
 
         // 초기 상태: 첫 번째 셀이 하단 중앙에 오도록 설정
         currentCellIndex = 0
+        selectedIndex = 0 // 명시적으로 첫 번째 항목 선택
 
         // 첫 번째 셀의 중앙 각도 계산
         let firstSegmentAngle = 2 * CGFloat.pi * CGFloat(data[0].percentage)
@@ -93,10 +94,8 @@ final class DonutChartView: UIView {
                 self.drawChart()
                 self.showLabels()
 
-                // 선택된 cuisine 방출
-                if self.selectedIndex >= 0 && self.selectedIndex < self.chartData.count {
-                    self.selectedCuisineSubject.onNext(self.chartData[self.selectedIndex].rawValue)
-                }
+                // 첫 번재 항목 바로 표기
+                self.selectedCuisineSubject.onNext(self.chartData[0].rawValue)
             }
         } else {
             // 레이아웃이 아직 완료되지 않은 경우, layoutSubviews에서 그리도록 플래그 리셋
@@ -111,6 +110,7 @@ final class DonutChartView: UIView {
         // 초기 차트를 한 번만 그림
         guard !hasDrawnInitialChart, !chartData.isEmpty, bounds.width > 0, bounds.height > 0 else { return }
         hasDrawnInitialChart = true
+        selectedIndex = 0 // 명시적으로 첫 번째 항목 선택
         drawChart()
 
         // 레이블 표시
@@ -118,9 +118,9 @@ final class DonutChartView: UIView {
             guard let self = self else { return }
             showLabels()
 
-            // 초기 선택된 cuisine 방출
-            if selectedIndex >= 0 && selectedIndex < chartData.count {
-                selectedCuisineSubject.onNext(chartData[selectedIndex].rawValue)
+            // 초기 선택된 cuisine 방출 (첫 번째 항목)
+            if !chartData.isEmpty {
+                selectedCuisineSubject.onNext(chartData[0].rawValue)
             }
         }
     }
