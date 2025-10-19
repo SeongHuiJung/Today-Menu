@@ -116,3 +116,7 @@
 
 ### etc.
 ![Kakao API](https://img.shields.io/badge/Kakao-Place%20API-FFCD00?style=flat-square&logo=kakao&logoColor=black)
+
+
+## AppSotre 링크
+[AppSotre 바로가기](https://apps.apple.com/kr/app/모모찌-오늘-뭐-먹지/id6753621374)
