@@ -30,7 +30,7 @@
 
 | 개인 맞춤 메뉴 추천 | 식사 기록 달력 | 음식 카테고리 필터링 | 위치 기반 식당 조회 | 차트 기반 식당 리포트 |
 |:---:|:---:|:---:|:---:|:---:|
-| <img width="1173" height="2543" alt="Image" src="https://github.com/user-attachments/assets/f007fdea-082a-4191-8665-9986b7a7d148" /> | <img width="1172" height="2547" alt="Image" src="https://github.com/user-attachments/assets/b891d17a-74de-4d4d-bfd5-25a6098a4285" /> | <img width="1173" height="2541" alt="Image" src="https://github.com/user-attachments/assets/17b63a9f-76be-471e-a1ba-e4b8abab8dee" /> | <img width="1153" height="2507" alt="Image" src="https://github.com/user-attachments/assets/62c42512-5cde-4b16-a797-46be38b98088" />  | <img width="1173" height="2541" alt="Image" src="https://github.com/user-attachments/assets/17b63a9f-76be-471e-a1ba-e4b8abab8dee" /> |
+| <img width="1173" height="2543" alt="Image" src="https://github.com/user-attachments/assets/f007fdea-082a-4191-8665-9986b7a7d148" /> | <img width="1172" height="2547" alt="Image" src="https://github.com/user-attachments/assets/b891d17a-74de-4d4d-bfd5-25a6098a4285" /> | <img width="1153" height="2506" alt="Image" src="https://github.com/user-attachments/assets/3962be99-be49-4f45-a969-90e9c2eb85d5" /> | <img width="1153" height="2507" alt="Image" src="https://github.com/user-attachments/assets/62c42512-5cde-4b16-a797-46be38b98088" />  | <img width="1173" height="2541" alt="Image" src="https://github.com/user-attachments/assets/17b63a9f-76be-471e-a1ba-e4b8abab8dee" /> |
 | 사용자의 선호도와 리뷰 데이터를 분석하여 취향에 맞는 음식을 추천 | 먹은 음식을 달력 형태로 시각화하여 식습관 파악 | 한식/중식/일식/양식 등 카테고리별 음식을 선택하여 시각화 | 주변 식당을 조회하고, 방문 식당 리뷰를 기록 | 카테고리별 섭취 비율을 동적 애니메이션인 원형차트로 시각화 |
 
 
