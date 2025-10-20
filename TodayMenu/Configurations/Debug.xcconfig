@@ -1,0 +1,12 @@
+//
+//  Debug.xcconfig
+//  TodayMenu
+//
+//  Created by 정성희 on 10/20/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+PRODUCT_BUNDLE_IDENTIFIER = com.jaySeong.TodayMenu.dev
+APP_DISPLAY_NAME = 모모찌 Dev
